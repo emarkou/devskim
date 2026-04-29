@@ -2,7 +2,6 @@
 
 Terminal feed reader for Hacker News, Reddit, and lobste.rs.
 
-![grokfeed main feed](docs/screenshots/feed.png)
 
 ## Features
 
