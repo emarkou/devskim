@@ -23,6 +23,21 @@ brew tap emarkou/grokfeed
 brew install grokfeed
 ```
 
+On first run, a config file is created at `~/.grokfeed/config.toml`. Edit it to change subreddits:
+
+```bash
+nano ~/.grokfeed/config.toml
+```
+
+```toml
+subreddits = ["programming", "ClaudeAI", "machinelearning"]
+hn_story_count = 30
+reddit_post_count = 15
+lobsters_post_count = 25
+```
+
+Changes take effect on next launch or press `r` to refresh.
+
 ### From source
 
 Requires Python 3.11+. Recommended: use [uv](https://github.com/astral-sh/uv).
