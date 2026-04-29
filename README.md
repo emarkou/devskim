@@ -2,9 +2,7 @@
 
 Terminal feed reader for Hacker News, Reddit, and lobste.rs.
 
-<!-- SCREENSHOT PLACEHOLDER
 ![grokfeed main feed](docs/screenshots/feed.png)
--->
 
 ## Features
 
@@ -37,13 +35,11 @@ grokfeed
 
 ## Screenshots
 
-<!-- Replace the blocks below with actual screenshots once captured.
-     Suggested tool: `textual run --screenshot grokfeed/app.py`
-     or just take a terminal screenshot and drop it in docs/screenshots/. -->
+![Feed](docs/screenshots/feed.png)
 
-| Feed | Post body | Comments |
-|------|-----------|----------|
-| _(screenshot)_ | _(screenshot)_ | _(screenshot)_ |
+![Post body](docs/screenshots/post.png)
+
+![Comments](docs/screenshots/comments.png)
 
 ## Key bindings
 
