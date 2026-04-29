@@ -11,7 +11,7 @@ CONFIG_DIR = Path.home() / ".grokfeed"
 CONFIG_PATH = CONFIG_DIR / "config.toml"
 
 DEFAULT_CONFIG = """\
-subreddits = ["programming", "python", "machinelearning"]
+subreddits = ["programming", "ClaudeAI", "machinelearning"]
 hn_story_count = 30
 reddit_post_count = 15
 lobsters_post_count = 25
