@@ -16,6 +16,15 @@ Terminal feed reader for Hacker News, Reddit, and lobste.rs.
 
 ## Install
 
+### Homebrew (recommended)
+
+```bash
+brew tap emarkou/grokfeed
+brew install grokfeed
+```
+
+### From source
+
 Requires Python 3.11+. Recommended: use [uv](https://github.com/astral-sh/uv).
 
 ```bash
