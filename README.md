@@ -58,13 +58,9 @@ pip install -e .
 grokfeed
 ```
 
-## Screenshots
+## Demo
 
-![Feed](docs/screenshots/feed.png)
-
-![Post body](docs/screenshots/post.png)
-
-![Comments](docs/screenshots/comments.png)
+![Demo](demo.gif)
 
 ## Key bindings
 
@@ -117,5 +113,4 @@ Edit to add or remove subreddits. Changes take effect on next launch or `r` refr
 |---------|------|
 | [Textual](https://github.com/Textualize/textual) | TUI framework |
 | [httpx](https://www.python-httpx.org/) | Async HTTP client |
-| [Typer](https://typer.tiangolo.com/) | CLI entry point |
-| [Rich](https://github.com/Textualize/rich) | Text rendering |
+| [Click](https://click.palletsprojects.com/) | CLI entry point |

@@ -1,0 +1,27 @@
+name: Demo GIF
+
+on:
+  push:
+    branches: [main]
+    paths: [demo.tape]
+    tags-ignore: ["*"]
+
+jobs:
+  vhs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install grokfeed
+        run: uv pip install . --system
+
+      - uses: charmbracelet/vhs-action@v2.1.0
+        with:
+          path: demo.tape
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update demo GIF"
+          file_pattern: "demo.gif"
