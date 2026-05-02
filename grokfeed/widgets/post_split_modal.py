@@ -120,9 +120,7 @@ class PostSplitModal(ModalScreen):
                         if body:
                             yield Markdown(body)
                         elif url:
-                            yield Label(
-                                f"{url}\n\n[dim]Press [bold]o[/] to open in browser[/]"
-                            )
+                            yield Label(f"{url}\n\n[dim]Press [bold]o[/] to open in browser[/]")
                         else:
                             yield Label("[dim]No content.[/]")
                 with Vertical(id="comments-panel"):
