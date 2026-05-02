@@ -65,9 +65,6 @@ class ContentModal(ModalScreen):
                 yield Markdown(self._item["body"])
             yield Label("q close  •  c comments  •  o open URL  •  j/k scroll", id="modal-hint")
 
-    def action_dismiss(self) -> None:
-        self.dismiss()
-
     def action_open_comments(self) -> None:
         from .comments_modal import CommentsModal
 
