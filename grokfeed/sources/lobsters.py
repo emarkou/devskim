@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import html as _html
 import re as _re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import httpx
 

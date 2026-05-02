@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from textual.widgets import ListView, ListItem
+from textual.widgets import ListItem, ListView
 
 from .story import StoryRow, source_color
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import html as _html
+import re as _re
 from dataclasses import dataclass
 
 import httpx
@@ -10,8 +12,6 @@ HN_ITEM = HN_BASE + "/item/{}.json"
 HN_TOP = HN_BASE + "/topstories.json"
 
 
-import html as _html
-import re as _re
 
 
 def _strip_html(raw: str) -> str:

@@ -75,7 +75,7 @@ async def fetch_reddit_posts(
         results = await asyncio.gather(*tasks)
         posts: list[RedditPost] = []
         new_after: dict[str, str] = {}
-        for sub, (batch, cursor) in zip(subreddits, results):
+        for sub, (batch, cursor) in zip(subreddits, results, strict=False):
             posts.extend(batch)
             if cursor:
                 new_after[sub] = cursor

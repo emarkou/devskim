@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 
 import httpx
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.widgets import Footer, Header, LoadingIndicator, Label, ListView
 from textual.containers import Container
+from textual.widgets import Footer, Header, Label, LoadingIndicator
 
 from .config import Config, load_cache, save_cache
-from .sources.hn import fetch_hn_stories, fetch_hn_top_ids, fetch_hn_stories_by_ids
-from .sources.reddit import fetch_reddit_posts
+from .sources.hn import fetch_hn_stories_by_ids, fetch_hn_top_ids
 from .sources.lobsters import fetch_lobsters_posts
+from .sources.reddit import fetch_reddit_posts
 from .widgets.feed import FeedList
 from .widgets.post_split_modal import PostSplitModal
 from .widgets.story import source_color as get_source_color

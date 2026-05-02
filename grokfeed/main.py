@@ -6,8 +6,8 @@ import click
 @click.command()
 def app() -> None:
     """Hacker News + Reddit terminal feed viewer."""
-    from .config import load_config, CONFIG_PATH
     from .app import GrokFeedApp
+    from .config import CONFIG_PATH, load_config
 
     config, created = load_config()
     if created:
