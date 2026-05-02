@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/img/grokfeed.png" alt="grokfeed" width="180"/>
+
 # grokfeed
 
 **Terminal feed reader for Hacker News, Reddit, and lobste.rs.**
