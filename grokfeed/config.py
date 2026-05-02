@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import time
+
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -9,12 +12,14 @@ from pathlib import Path
 
 CONFIG_DIR = Path.home() / ".grokfeed"
 CONFIG_PATH = CONFIG_DIR / "config.toml"
+CACHE_PATH = CONFIG_DIR / "cache.json"
 
 DEFAULT_CONFIG = """\
 subreddits = ["programming", "ClaudeAI", "machinelearning"]
 hn_story_count = 30
 reddit_post_count = 15
 lobsters_post_count = 25
+cache_ttl_minutes = 10
 """
 
 
@@ -24,6 +29,7 @@ class Config:
     hn_story_count: int = 30
     reddit_post_count: int = 15
     lobsters_post_count: int = 25
+    cache_ttl_minutes: int = 10
 
 
 def load_config() -> tuple[Config, bool]:
@@ -40,4 +46,25 @@ def load_config() -> tuple[Config, bool]:
         hn_story_count=int(raw.get("hn_story_count", 30)),
         reddit_post_count=int(raw.get("reddit_post_count", 15)),
         lobsters_post_count=int(raw.get("lobsters_post_count", 25)),
+        cache_ttl_minutes=int(raw.get("cache_ttl_minutes", 10)),
     ), created
+
+
+def load_cache(ttl_minutes: int) -> list[dict] | None:
+    if not CACHE_PATH.exists():
+        return None
+    try:
+        data = json.loads(CACHE_PATH.read_text())
+        if time.time() - data["ts"] > ttl_minutes * 60:
+            return None
+        return data["items"]
+    except Exception:
+        return None
+
+
+def save_cache(items: list[dict]) -> None:
+    try:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        CACHE_PATH.write_text(json.dumps({"ts": time.time(), "items": items}))
+    except Exception:
+        pass

@@ -27,26 +27,32 @@ class LobstersPost:
     source: str = "lobste.rs"
 
 
-async def fetch_lobsters_posts(count: int = 25) -> list[LobstersPost]:
-    headers = {"User-Agent": USER_AGENT}
-    async with httpx.AsyncClient(headers=headers) as client:
+async def fetch_lobsters_posts(
+    count: int = 25,
+    client: httpx.AsyncClient | None = None,
+) -> list[LobstersPost]:
+    async def _run(c: httpx.AsyncClient) -> list[LobstersPost]:
         try:
-            r = await client.get(LOBSTERS_URL, timeout=15)
+            r = await c.get(LOBSTERS_URL, timeout=15, headers={"User-Agent": USER_AGENT})
             r.raise_for_status()
             data = r.json()
         except Exception:
             return []
+        posts: list[LobstersPost] = []
+        for item in data[:count]:
+            raw_desc = item.get("description", "")
+            ext_url = item.get("url", "")
+            posts.append(LobstersPost(
+                id=item.get("short_id", ""),
+                title=item.get("title", "(no title)"),
+                url=ext_url or item.get("comments_url", ""),
+                score=item.get("score", 0),
+                comments=item.get("comment_count", 0),
+                body=_strip_html(raw_desc) if raw_desc else "",
+            ))
+        return posts
 
-    posts: list[LobstersPost] = []
-    for item in data[:count]:
-        raw_desc = item.get("description", "")
-        ext_url = item.get("url", "")
-        posts.append(LobstersPost(
-            id=item.get("short_id", ""),
-            title=item.get("title", "(no title)"),
-            url=ext_url or item.get("comments_url", ""),
-            score=item.get("score", 0),
-            comments=item.get("comment_count", 0),
-            body=_strip_html(raw_desc) if raw_desc else "",
-        ))
-    return posts
+    if client is not None:
+        return await _run(client)
+    async with httpx.AsyncClient() as c:
+        return await _run(c)
