@@ -21,6 +21,21 @@ from .widgets.story import source_color as get_source_color
 ALL = "all"
 
 
+def _interleave_by_score(items: list[dict]) -> list[dict]:
+    """Sort items by score normalized within each source (0–1 scale)."""
+    from collections import defaultdict
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for item in items:
+        groups[item["source"]].append(item)
+    for source_items in groups.values():
+        scores = [i["score"] for i in source_items]
+        lo, hi = min(scores), max(scores)
+        span = hi - lo or 1
+        for item in source_items:
+            item["_norm_score"] = (item["score"] - lo) / span
+    return sorted(items, key=lambda i: i.get("_norm_score", 0), reverse=True)
+
+
 class GrokFeedApp(App):
     """Hacker News + Reddit terminal feed."""
 
@@ -137,7 +152,7 @@ class GrokFeedApp(App):
     def _apply_filter(self) -> None:
         feed = self.query_one(FeedList)
         if self._source_filter == ALL:
-            visible = self._all_items
+            visible = _interleave_by_score(self._all_items)
         else:
             visible = [i for i in self._all_items if i["source"] == self._source_filter]
         feed.load_items(visible)
