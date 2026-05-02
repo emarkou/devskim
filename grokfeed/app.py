@@ -103,12 +103,9 @@ class GrokFeedApp(App):
         if cached:
             self._all_items = cached
             self._sources = [ALL] + list(dict.fromkeys(i["source"] for i in cached))
-            self._apply_filter()
+            self._apply_filter(from_cache=True)
             loading.display = False
             feed.display = True
-            self._set_status(
-                f"{len(cached)} stories (cached)  •  Enter = open  •  f = filter  •  r = refresh"
-            )
             return
 
         self._set_status("Fetching stories…")
@@ -146,16 +143,18 @@ class GrokFeedApp(App):
 
         loading.display = False
         feed.display = True
-        count = len(items)
-        self._set_status(f"{count} stories loaded  •  Enter = open  •  f = filter  •  r = refresh")
 
-    def _apply_filter(self) -> None:
+    def _apply_filter(self, from_cache: bool = False) -> None:
         feed = self.query_one(FeedList)
         if self._source_filter == ALL:
             visible = _interleave_by_score(self._all_items)
+            label = "all sources"
         else:
             visible = [i for i in self._all_items if i["source"] == self._source_filter]
+            label = self._source_filter
         feed.load_items(visible)
+        suffix = " (cached)" if from_cache else ""
+        self._set_status(f"{len(visible)} stories — {label}{suffix}")
 
     def _set_status(self, msg: str) -> None:
         self.query_one("#status-bar", Label).update(msg)
@@ -185,6 +184,4 @@ class GrokFeedApp(App):
         except ValueError:
             idx = 0
         self._source_filter = self._sources[(idx + 1) % len(self._sources)]
-        label = "All sources" if self._source_filter == ALL else self._source_filter
-        self._set_status(f"Showing: {label}")
         self._apply_filter()
