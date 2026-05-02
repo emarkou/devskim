@@ -98,7 +98,14 @@ async def test_fetch_hn_stories_http_error_returns_empty(httpx_mock: HTTPXMock):
 async def test_fetch_hn_stories_multiple_ids_filtered(httpx_mock: HTTPXMock):
     httpx_mock.add_response(
         url=f"{HN_BASE}/item/10.json",
-        json={"id": 10, "type": "story", "title": "A", "url": "https://a.com", "score": 1, "descendants": 0},
+        json={
+            "id": 10,
+            "type": "story",
+            "title": "A",
+            "url": "https://a.com",
+            "score": 1,
+            "descendants": 0,
+        },
     )
     httpx_mock.add_response(url=f"{HN_BASE}/item/11.json", json={"id": 11, "type": "comment"})
     async with httpx.AsyncClient() as client:

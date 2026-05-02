@@ -70,6 +70,7 @@ class ContentModal(ModalScreen):
 
     def action_open_comments(self) -> None:
         from .comments_modal import CommentsModal
+
         self.app.push_screen(CommentsModal(self._item, self._source_color))
 
     def action_open_url(self) -> None:

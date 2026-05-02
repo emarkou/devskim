@@ -12,8 +12,6 @@ HN_ITEM = HN_BASE + "/item/{}.json"
 HN_TOP = HN_BASE + "/topstories.json"
 
 
-
-
 def _strip_html(raw: str) -> str:
     text = _re.sub(r"<p>", "\n\n", raw)
     text = _re.sub(r"<[^>]+>", "", text)
