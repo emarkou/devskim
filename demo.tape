@@ -5,7 +5,7 @@ Set FontSize 13
 Set Width 1200
 Set Height 600
 Set Theme "Dracula"
-Set Framerate 24
+Set Framerate 20
 
 Type "grokfeed"
 Enter
