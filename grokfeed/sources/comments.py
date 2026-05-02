@@ -29,6 +29,7 @@ def _strip_html(raw: str) -> str:
 
 # ── HN ────────────────────────────────────────────────────────────────────────
 
+
 async def _fetch_hn_comment(
     client: httpx.AsyncClient, sem: asyncio.Semaphore, cid: int
 ) -> Comment | None:
@@ -64,6 +65,7 @@ async def fetch_hn_comments(story_id: int, limit: int = 30) -> list[Comment]:
 
 # ── Reddit ─────────────────────────────────────────────────────────────────────
 
+
 def _flatten_reddit(children: list, depth: int = 0, max_depth: int = 2) -> list[Comment]:
     out: list[Comment] = []
     for child in children:
@@ -73,12 +75,14 @@ def _flatten_reddit(children: list, depth: int = 0, max_depth: int = 2) -> list[
         body = d.get("body", "")
         if body in ("[deleted]", "[removed]", ""):
             continue
-        out.append(Comment(
-            author=d.get("author", "[deleted]"),
-            score=d.get("score", 0),
-            body=body,
-            depth=depth,
-        ))
+        out.append(
+            Comment(
+                author=d.get("author", "[deleted]"),
+                score=d.get("score", 0),
+                body=body,
+                depth=depth,
+            )
+        )
         if depth < max_depth:
             replies = d.get("replies", "")
             if isinstance(replies, dict):
@@ -106,6 +110,7 @@ async def fetch_reddit_comments(subreddit: str, post_id: str) -> list[Comment]:
 
 # ── lobste.rs ──────────────────────────────────────────────────────────────────
 
+
 async def fetch_lobsters_comments(short_id: str) -> list[Comment]:
     headers = {"User-Agent": USER_AGENT}
     url = LOBSTERS_POST.format(short_id=short_id)
@@ -124,16 +129,19 @@ async def fetch_lobsters_comments(short_id: str) -> list[Comment]:
             continue
         raw_user = c.get("commenting_user", "?")
         author = raw_user if isinstance(raw_user, str) else raw_user.get("username", "?")
-        out.append(Comment(
-            author=author,
-            score=c.get("score", 0),
-            body=body,
-            depth=c.get("indent_level", 0),
-        ))
+        out.append(
+            Comment(
+                author=author,
+                score=c.get("score", 0),
+                body=body,
+                depth=c.get("indent_level", 0),
+            )
+        )
     return out
 
 
 # ── Dispatcher ─────────────────────────────────────────────────────────────────
+
 
 async def fetch_comments(item: dict) -> list[Comment]:
     source = item.get("source", "")

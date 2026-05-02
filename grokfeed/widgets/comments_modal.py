@@ -99,7 +99,7 @@ class CommentsModal(ModalScreen):
     async def _load_comments(self) -> None:
         from ..sources.comments import fetch_comments
 
-        loading = self.query_one("#loading-comments")
+        loading = self.query_one("#loading-comments", Label)
         scroll = self.query_one("#comments-scroll", ScrollableContainer)
 
         try:
@@ -116,9 +116,6 @@ class CommentsModal(ModalScreen):
 
         for c in comments:
             await scroll.mount(CommentWidget(c, self._source_color))
-
-    def action_dismiss(self) -> None:
-        self.dismiss()
 
     def action_scroll_down(self) -> None:
         self.query_one("#comments-scroll", ScrollableContainer).scroll_down()

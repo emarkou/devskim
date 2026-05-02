@@ -138,7 +138,7 @@ class PostSplitModal(ModalScreen):
     async def _load_comments(self) -> None:
         from ..sources.comments import fetch_comments
 
-        loading = self.query_one("#loading-comments")
+        loading = self.query_one("#loading-comments", Label)
         scroll = self.query_one("#comments-scroll", ScrollableContainer)
 
         try:
@@ -177,6 +177,3 @@ class PostSplitModal(ModalScreen):
         url = self._item.get("url")
         if url:
             self.app.open_url(url)
-
-    def action_dismiss(self) -> None:
-        self.dismiss()

@@ -25,7 +25,9 @@ cache_ttl_minutes = 10
 
 @dataclass
 class Config:
-    subreddits: list[str] = field(default_factory=lambda: ["programming", "python", "machinelearning"])
+    subreddits: list[str] = field(
+        default_factory=lambda: ["programming", "python", "machinelearning"]
+    )
     hn_story_count: int = 30
     reddit_post_count: int = 15
     lobsters_post_count: int = 25

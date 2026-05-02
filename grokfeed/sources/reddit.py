@@ -28,7 +28,10 @@ REDDIT_HOT_AFTER = "https://www.reddit.com/r/{subreddit}/hot.json?limit={limit}&
 
 
 async def _fetch_subreddit(
-    client: httpx.AsyncClient, subreddit: str, count: int, after: str = "",
+    client: httpx.AsyncClient,
+    subreddit: str,
+    count: int,
+    after: str = "",
 ) -> tuple[list[RedditPost], str]:
     posts: list[RedditPost] = []
     new_after = ""
@@ -48,15 +51,17 @@ async def _fetch_subreddit(
             selftext = d.get("selftext", "")
             permalink = f"https://reddit.com{d.get('permalink', '')}"
             post_url = d.get("url") or permalink
-            posts.append(RedditPost(
-                id=d.get("id", ""),
-                title=d.get("title", "(no title)"),
-                url=permalink if d.get("is_self") else post_url,
-                score=d.get("score", 0),
-                comments=d.get("num_comments", 0),
-                subreddit=subreddit,
-                body=selftext if selftext not in ("", "[deleted]", "[removed]") else "",
-            ))
+            posts.append(
+                RedditPost(
+                    id=d.get("id", ""),
+                    title=d.get("title", "(no title)"),
+                    url=permalink if d.get("is_self") else post_url,
+                    score=d.get("score", 0),
+                    comments=d.get("num_comments", 0),
+                    subreddit=subreddit,
+                    body=selftext if selftext not in ("", "[deleted]", "[removed]") else "",
+                )
+            )
     except Exception:
         pass
     return posts, new_after
@@ -75,7 +80,7 @@ async def fetch_reddit_posts(
         results = await asyncio.gather(*tasks)
         posts: list[RedditPost] = []
         new_after: dict[str, str] = {}
-        for sub, (batch, cursor) in zip(subreddits, results):
+        for sub, (batch, cursor) in zip(subreddits, results, strict=False):
             posts.extend(batch)
             if cursor:
                 new_after[sub] = cursor
