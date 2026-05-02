@@ -4,7 +4,6 @@ import asyncio
 from dataclasses import dataclass
 
 import httpx
-import orjson
 
 HN_BASE = "https://hacker-news.firebaseio.com/v0"
 HN_ITEM = HN_BASE + "/item/{}.json"
@@ -36,7 +35,7 @@ async def _fetch_item(client: httpx.AsyncClient, item_id: int) -> Story | None:
     try:
         r = await client.get(HN_ITEM.format(item_id), timeout=10)
         r.raise_for_status()
-        d = orjson.loads(r.content)
+        d = r.json()
         if not d or d.get("type") != "story":
             return None
         raw_text = d.get("text", "")
@@ -60,7 +59,7 @@ async def fetch_hn_stories(
         sem = asyncio.Semaphore(10)
         r = await c.get(HN_TOP, timeout=10)
         r.raise_for_status()
-        ids = orjson.loads(r.content)[:count]
+        ids = r.json()[:count]
 
         async def _bounded(item_id: int) -> Story | None:
             async with sem:

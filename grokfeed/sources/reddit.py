@@ -4,7 +4,6 @@ import asyncio
 from dataclasses import dataclass
 
 import httpx
-import orjson
 
 USER_AGENT = "grokfeed:v0.1.0 (terminal feed reader)"
 REDDIT_HOT = "https://www.reddit.com/r/{subreddit}/hot.json?limit={limit}"
@@ -33,7 +32,7 @@ async def _fetch_subreddit(
         url = REDDIT_HOT.format(subreddit=subreddit, limit=count)
         r = await client.get(url, timeout=15, headers={"User-Agent": USER_AGENT})
         r.raise_for_status()
-        data = orjson.loads(r.content)
+        data = r.json()
         for child in data.get("data", {}).get("children", []):
             d = child.get("data", {})
             selftext = d.get("selftext", "")
