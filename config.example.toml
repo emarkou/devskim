@@ -1,0 +1,17 @@
+# grokfeed configuration
+# Copy to ~/.grokfeed/config.toml and edit to taste.
+
+# Subreddits to include in the feed (without the r/ prefix).
+subreddits = ["programming", "python", "machinelearning", "rust", "devops"]
+
+# Number of HN top stories to load per fetch.
+hn_story_count = 30
+
+# Number of posts to fetch per subreddit per fetch.
+reddit_post_count = 15
+
+# Number of lobste.rs posts to fetch.
+lobsters_post_count = 25
+
+# How many minutes to serve cached results before hitting the network again.
+cache_ttl_minutes = 10
