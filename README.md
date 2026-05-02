@@ -118,3 +118,7 @@ Run `grokfeed` — changes take effect on next launch or press `r` to refresh.
 | [Textual](https://github.com/Textualize/textual) | TUI framework |
 | [httpx](https://www.python-httpx.org/) | Async HTTP client |
 | [Click](https://click.palletsprojects.com/) | CLI entry point |
+
+---
+Related posts: 
+- https://dev.to/elemar/building-a-terminal-feed-reader-for-hacker-news-reddit-and-lobsters-with-python-textual-2alf
