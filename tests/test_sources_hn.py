@@ -45,6 +45,7 @@ async def test_fetch_hn_stories_by_ids_link_post(httpx_mock: HTTPXMock):
             "score": 100,
             "descendants": 42,
             "text": "",
+            "time": 1700000000,
         },
     )
     async with httpx.AsyncClient() as client:
@@ -56,6 +57,7 @@ async def test_fetch_hn_stories_by_ids_link_post(httpx_mock: HTTPXMock):
     assert s.comments == 42
     assert s.url == "https://example.com"
     assert s.body == ""
+    assert s.created_at == 1700000000
 
 
 @pytest.mark.asyncio

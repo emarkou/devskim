@@ -12,6 +12,7 @@ def _item(
     score: int = 10,
     comment_count: int = 5,
     description: str = "",
+    created_at: str = "2023-11-14T22:13:20.000Z",
 ) -> dict:
     return {
         "short_id": short_id,
@@ -21,6 +22,7 @@ def _item(
         "comment_count": comment_count,
         "description": description,
         "comments_url": f"https://lobste.rs/s/{short_id}",
+        "created_at": created_at,
     }
 
 
@@ -38,6 +40,7 @@ async def test_fetch_lobsters_posts_basic(httpx_mock: HTTPXMock):
     assert p.comments == 8
     assert p.source == "lobste.rs"
     assert p.url == "https://example.com"
+    assert p.created_at == 1700000000  # 2023-11-14T22:13:20Z
 
 
 @pytest.mark.asyncio

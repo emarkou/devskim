@@ -16,6 +16,7 @@ def _child(
     subreddit: str = "python",
     is_self: bool = False,
     selftext: str = "",
+    created_utc: float = 1700000000.0,
 ) -> dict:
     return {
         "data": {
@@ -28,6 +29,7 @@ def _child(
             "permalink": f"/r/{subreddit}/comments/{post_id}/test/",
             "is_self": is_self,
             "selftext": selftext,
+            "created_utc": created_utc,
         }
     }
 
@@ -45,6 +47,7 @@ async def test_fetch_reddit_posts_link_post(httpx_mock: HTTPXMock):
     assert p.score == 500
     assert p.source == "r/python"
     assert p.url == "https://example.com"
+    assert p.created_at == 1700000000
     assert after == {"python": "t3_next"}
 
 
