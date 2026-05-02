@@ -20,6 +20,8 @@ def _strip_html(raw: str) -> str:
 
 @dataclass
 class Story:
+    """A Hacker News story."""
+
     id: int
     title: str
     url: str
@@ -50,6 +52,7 @@ async def _fetch_item(client: httpx.AsyncClient, item_id: int) -> Story | None:
 
 
 async def fetch_hn_top_ids(client: httpx.AsyncClient) -> list[int]:
+    """Return the current ranked list of top story IDs from HN."""
     r = await client.get(HN_TOP, timeout=10)
     r.raise_for_status()
     return r.json()
@@ -59,6 +62,8 @@ async def fetch_hn_stories_by_ids(
     ids: list[int],
     client: httpx.AsyncClient | None = None,
 ) -> list[Story]:
+    """Fetch Story objects for the given IDs with up to 10 concurrent requests."""
+
     async def _run(c: httpx.AsyncClient) -> list[Story]:
         sem = asyncio.Semaphore(10)
 
@@ -79,6 +84,8 @@ async def fetch_hn_stories(
     count: int = 30,
     client: httpx.AsyncClient | None = None,
 ) -> list[Story]:
+    """Fetch the top N stories from Hacker News."""
+
     async def _run(c: httpx.AsyncClient) -> list[Story]:
         ids = (await fetch_hn_top_ids(c))[:count]
         return await fetch_hn_stories_by_ids(ids, c)

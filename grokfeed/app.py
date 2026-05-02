@@ -100,6 +100,7 @@ class GrokFeedApp(App):
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
     async def _load_all(self) -> None:
+        """Fetch all sources concurrently; serve from cache if still fresh."""
         loading = self.query_one("#loading")
         feed = self.query_one(FeedList)
         loading.display = True
@@ -189,6 +190,7 @@ class GrokFeedApp(App):
         feed.display = True
 
     def _apply_filter(self, from_cache: bool = False) -> None:
+        """Re-render the feed list for the active source filter."""
         feed = self.query_one(FeedList)
         if self._source_filter == ALL:
             visible = _interleave_by_score(self._all_items)
@@ -210,6 +212,7 @@ class GrokFeedApp(App):
         self.query_one(FeedList).action_cursor_up()
 
     def action_open_or_body(self) -> None:
+        """Open the split view for the highlighted story and mark it seen."""
         feed = self.query_one(FeedList)
         item = feed.current_item()
         if not item:
@@ -226,6 +229,7 @@ class GrokFeedApp(App):
         self.run_worker(self._fetch_more(), exclusive=True, name="fetch-more")
 
     async def _fetch_more(self) -> None:
+        """Fetch the next page of HN and Reddit items, skipping duplicates."""
         self._set_status("Loading more…")
         try:
             async with httpx.AsyncClient() as client:
@@ -287,6 +291,7 @@ class GrokFeedApp(App):
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
     def action_cycle_source(self) -> None:
+        """Step through the source filter cycle (All → HN → subreddits → lobste.rs → …)."""
         if not self._sources:
             return
         try:

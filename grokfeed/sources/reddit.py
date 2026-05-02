@@ -11,6 +11,8 @@ REDDIT_HOT = "https://www.reddit.com/r/{subreddit}/hot.json?limit={limit}"
 
 @dataclass
 class RedditPost:
+    """A Reddit post from a subreddit hot listing."""
+
     id: str
     title: str
     url: str
@@ -73,6 +75,7 @@ async def fetch_reddit_posts(
     client: httpx.AsyncClient | None = None,
     after: dict[str, str] | None = None,
 ) -> tuple[list[RedditPost], dict[str, str]]:
+    """Fetch hot posts from multiple subreddits concurrently."""
     after = after or {}
 
     async def _run(c: httpx.AsyncClient) -> tuple[list[RedditPost], dict[str, str]]:

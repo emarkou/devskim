@@ -10,6 +10,7 @@ SEEN_TTL_SECONDS = 86_400  # 1 day
 
 
 def load_seen() -> set[str]:
+    """Return post IDs opened within the last 24 hours."""
     if not SEEN_PATH.exists():
         return set()
     try:
@@ -21,6 +22,7 @@ def load_seen() -> set[str]:
 
 
 def mark_seen(post_id: str) -> None:
+    """Record post_id as seen, pruning entries older than the TTL."""
     try:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         data: dict[str, float] = {}

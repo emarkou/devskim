@@ -19,6 +19,7 @@ LOBSTERS_COLOR = "#ac130d"
 
 
 def source_color(source: str, subreddit_index: int) -> str:
+    """Return a hex color string for the given source."""
     if source == "HN":
         return HN_COLOR
     if source == "lobste.rs":
@@ -67,6 +68,7 @@ class StoryRow(Static):
         self.seen = seen
 
     def render(self) -> str:
+        """Render source tag, title (dimmed if seen), and score/comment counts."""
         tag = f"[bold {self.color}][{self.source}][/]"
         title = f"[dim]{self.story_title}[/]" if self.seen else self.story_title
         meta = f"[dim]▲{self.score:,}  💬{self.num_comments:,}[/]"

@@ -66,11 +66,13 @@ class ContentModal(ModalScreen):
             yield Label("q close  •  c comments  •  o open URL  •  j/k scroll", id="modal-hint")
 
     def action_open_comments(self) -> None:
+        """Push the comments modal onto the screen stack."""
         from .comments_modal import CommentsModal
 
         self.app.push_screen(CommentsModal(self._item, self._source_color))
 
     def action_open_url(self) -> None:
+        """Open the story URL in the system browser."""
         url = self._item.get("url")
         if url:
             self.app.open_url(url)

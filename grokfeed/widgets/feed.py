@@ -29,6 +29,7 @@ class FeedList(ListView):
         self._subreddit_color_map: dict[str, str] = {}
 
     def load_items(self, items: list[dict], seen_ids: set[str] | None = None) -> None:
+        """Rebuild the list from items, dimming posts whose IDs are in seen_ids."""
         self._items = items
         self._build_color_map(items)
         self.clear()
@@ -49,6 +50,7 @@ class FeedList(ListView):
             self.index = 0
 
     def mark_current_seen(self) -> None:
+        """Dim the highlighted row in place without rebuilding the list."""
         if self.index is None:
             return
         rows = list(self.query(StoryRow))
@@ -56,6 +58,7 @@ class FeedList(ListView):
             rows[self.index].seen = True
 
     def _build_color_map(self, items: list[dict]) -> None:
+        """Assign a stable palette color to each subreddit on first encounter."""
         idx = 0
         for item in items:
             src = item["source"]
@@ -64,16 +67,19 @@ class FeedList(ListView):
                 idx += 1
 
     def _color_for(self, source: str) -> str:
+        """Return the pre-assigned display color for a source."""
         if source == "HN":
             return source_color("HN", 0)
         return self._subreddit_color_map.get(source, source_color(source, 0))
 
     def current_item(self) -> dict | None:
+        """Return the item dict for the highlighted row, or None."""
         if self.index is not None and 0 <= self.index < len(self._items):
             return self._items[self.index]
         return None
 
     def current_url(self) -> str | None:
+        """Return the URL of the highlighted item, or None."""
         item = self.current_item()
         return item["url"] if item else None
 

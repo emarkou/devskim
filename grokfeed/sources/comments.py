@@ -15,6 +15,8 @@ LOBSTERS_POST = "https://lobste.rs/s/{short_id}.json"
 
 @dataclass
 class Comment:
+    """A single comment with author, score, plain-text body, and nesting depth."""
+
     author: str
     score: int
     body: str
@@ -52,6 +54,7 @@ async def _fetch_hn_comment(
 
 
 async def fetch_hn_comments(story_id: int, limit: int = 30) -> list[Comment]:
+    """Fetch top-level comments for a HN story."""
     sem = asyncio.Semaphore(10)
     async with httpx.AsyncClient() as client:
         r = await client.get(HN_ITEM.format(story_id), timeout=10)
@@ -92,6 +95,7 @@ def _flatten_reddit(children: list, depth: int = 0, max_depth: int = 2) -> list[
 
 
 async def fetch_reddit_comments(subreddit: str, post_id: str) -> list[Comment]:
+    """Fetch and flatten threaded comments for a Reddit post (depth ≤ 3)."""
     headers = {"User-Agent": USER_AGENT}
     url = REDDIT_COMMENTS.format(subreddit=subreddit, post_id=post_id)
     async with httpx.AsyncClient(headers=headers) as client:
@@ -112,6 +116,7 @@ async def fetch_reddit_comments(subreddit: str, post_id: str) -> list[Comment]:
 
 
 async def fetch_lobsters_comments(short_id: str) -> list[Comment]:
+    """Fetch comments for a lobste.rs post."""
     headers = {"User-Agent": USER_AGENT}
     url = LOBSTERS_POST.format(short_id=short_id)
     async with httpx.AsyncClient(headers=headers) as client:
@@ -144,6 +149,7 @@ async def fetch_lobsters_comments(short_id: str) -> list[Comment]:
 
 
 async def fetch_comments(item: dict) -> list[Comment]:
+    """Dispatch to the correct comment fetcher based on item source."""
     source = item.get("source", "")
     if source == "HN":
         return await fetch_hn_comments(int(item["post_id"]))
