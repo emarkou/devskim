@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/img/grokfeed.png" alt="grokfeed" width="180" />
+<img src="docs/img/grokfeed.png" alt="grokfeed"/>
 
 # grokfeed
 
