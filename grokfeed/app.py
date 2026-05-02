@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import math
+import time as _time
 
 import httpx
 from textual.app import App, ComposeResult
@@ -19,11 +21,15 @@ from .widgets.story import source_color as get_source_color
 # Source filter sentinel
 ALL = "all"
 
+# half-life ~17 hours
+DECAY_LAMBDA = 0.04
+
 
 def _interleave_by_score(items: list[dict]) -> list[dict]:
-    """Sort items by score normalized within each source (0–1 scale)."""
+    """Sort items by score normalized within each source, decayed by age."""
     from collections import defaultdict
 
+    now = _time.time()
     groups: dict[str, list[dict]] = defaultdict(list)
     for item in items:
         groups[item["source"]].append(item)
@@ -32,7 +38,9 @@ def _interleave_by_score(items: list[dict]) -> list[dict]:
         lo, hi = min(scores), max(scores)
         span = hi - lo or 1
         for item in source_items:
-            item["_norm_score"] = (item["score"] - lo) / span
+            norm = (item["score"] - lo) / span
+            age_hours = max(0.0, now - item.get("created_at", now)) / 3600
+            item["_norm_score"] = norm * math.exp(-DECAY_LAMBDA * age_hours)
     return sorted(items, key=lambda i: i.get("_norm_score", 0), reverse=True)
 
 
@@ -150,6 +158,7 @@ class GrokFeedApp(App):
                     "url": s.url,
                     "body": s.body,
                     "post_id": str(s.id),
+                    "created_at": s.created_at,
                 }
             )
         for p in reddit_posts:
@@ -163,6 +172,7 @@ class GrokFeedApp(App):
                     "body": p.body,
                     "post_id": p.id,
                     "subreddit": p.subreddit,
+                    "created_at": p.created_at,
                 }
             )
         for lp in lobsters_posts:
@@ -175,6 +185,7 @@ class GrokFeedApp(App):
                     "url": lp.url,
                     "body": lp.body,
                     "post_id": lp.id,
+                    "created_at": lp.created_at,
                 }
             )
 
@@ -255,6 +266,7 @@ class GrokFeedApp(App):
                         "url": s.url,
                         "body": s.body,
                         "post_id": str(s.id),
+                        "created_at": s.created_at,
                     }
                 )
         for p in reddit_posts:
@@ -269,6 +281,7 @@ class GrokFeedApp(App):
                         "body": p.body,
                         "post_id": p.id,
                         "subreddit": p.subreddit,
+                        "created_at": p.created_at,
                     }
                 )
 

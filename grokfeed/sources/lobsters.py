@@ -3,6 +3,7 @@ from __future__ import annotations
 import html as _html
 import re as _re
 from dataclasses import dataclass
+from datetime import datetime
 
 import httpx
 
@@ -26,6 +27,7 @@ class LobstersPost:
     comments: int
     body: str = ""  # description for discussion posts
     source: str = "lobste.rs"
+    created_at: int = 0
 
 
 async def fetch_lobsters_posts(
@@ -43,6 +45,11 @@ async def fetch_lobsters_posts(
         for item in data[:count]:
             raw_desc = item.get("description", "")
             ext_url = item.get("url", "")
+            ts = item.get("created_at", "")
+            try:
+                created_at = int(datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp())
+            except (ValueError, AttributeError):
+                created_at = 0
             posts.append(
                 LobstersPost(
                     id=item.get("short_id", ""),
@@ -51,6 +58,7 @@ async def fetch_lobsters_posts(
                     score=item.get("score", 0),
                     comments=item.get("comment_count", 0),
                     body=_strip_html(raw_desc) if raw_desc else "",
+                    created_at=created_at,
                 )
             )
         return posts

@@ -18,6 +18,7 @@ class RedditPost:
     comments: int
     subreddit: str
     body: str = ""  # selftext for text posts; empty for link posts
+    created_at: int = 0
 
     @property
     def source(self) -> str:
@@ -60,6 +61,7 @@ async def _fetch_subreddit(
                     comments=d.get("num_comments", 0),
                     subreddit=subreddit,
                     body=selftext if selftext not in ("", "[deleted]", "[removed]") else "",
+                    created_at=int(d.get("created_utc", 0)),
                 )
             )
     except Exception:

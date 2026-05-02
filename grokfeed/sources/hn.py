@@ -27,6 +27,7 @@ class Story:
     comments: int
     body: str = ""  # present for Ask HN / Tell HN posts
     source: str = "HN"
+    created_at: int = 0
 
 
 async def _fetch_item(client: httpx.AsyncClient, item_id: int) -> Story | None:
@@ -44,6 +45,7 @@ async def _fetch_item(client: httpx.AsyncClient, item_id: int) -> Story | None:
             score=d.get("score", 0),
             comments=d.get("descendants", 0),
             body=_strip_html(raw_text) if raw_text else "",
+            created_at=int(d.get("time", 0)),
         )
     except Exception:
         return None
