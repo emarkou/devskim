@@ -28,10 +28,11 @@ class FeedList(ListView):
         self._items: list[dict] = []
         self._subreddit_color_map: dict[str, str] = {}
 
-    def load_items(self, items: list[dict]) -> None:
+    def load_items(self, items: list[dict], seen_ids: set[str] | None = None) -> None:
         self._items = items
         self._build_color_map(items)
         self.clear()
+        seen_ids = seen_ids or set()
         for item in items:
             color = self._color_for(item["source"])
             row = StoryRow(
@@ -41,10 +42,18 @@ class FeedList(ListView):
                 comments=item["comments"],
                 url=item["url"],
                 color=color,
+                seen=item.get("post_id", "") in seen_ids,
             )
             self.append(ListItem(row))
         if items:
             self.index = 0
+
+    def mark_current_seen(self) -> None:
+        if self.index is None:
+            return
+        rows = list(self.query(StoryRow))
+        if 0 <= self.index < len(rows):
+            rows[self.index].seen = True
 
     def _build_color_map(self, items: list[dict]) -> None:
         idx = 0

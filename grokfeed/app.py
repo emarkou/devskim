@@ -9,6 +9,7 @@ from textual.containers import Container
 from textual.widgets import Footer, Header, Label, LoadingIndicator
 
 from .config import Config, load_cache, save_cache
+from .seen import load_seen, mark_seen
 from .sources.hn import fetch_hn_stories_by_ids, fetch_hn_top_ids
 from .sources.lobsters import fetch_lobsters_posts
 from .sources.reddit import fetch_reddit_posts
@@ -85,6 +86,7 @@ class GrokFeedApp(App):
         self._hn_ids: list[int] = []
         self._hn_offset: int = 0
         self._reddit_after: dict[str, str] = {}
+        self._seen: set[str] = load_seen()
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -194,7 +196,7 @@ class GrokFeedApp(App):
         else:
             visible = [i for i in self._all_items if i["source"] == self._source_filter]
             label = self._source_filter
-        feed.load_items(visible)
+        feed.load_items(visible, seen_ids=self._seen)
         suffix = " (cached)" if from_cache else ""
         self._set_status(f"{len(visible)} stories — {label}{suffix}")
 
@@ -212,6 +214,11 @@ class GrokFeedApp(App):
         item = feed.current_item()
         if not item:
             return
+        post_id = item.get("post_id", "")
+        if post_id:
+            self._seen.add(post_id)
+            mark_seen(post_id)
+            feed.mark_current_seen()
         color = get_source_color(item["source"], 0)
         self.push_screen(PostSplitModal(item, color))
 
