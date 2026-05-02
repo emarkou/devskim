@@ -16,12 +16,36 @@ Terminal feed reader for Hacker News, Reddit, and lobste.rs.
 
 ## Install
 
-### Homebrew (recommended)
+### Homebrew (macOS/Linux)
 
 ```bash
 brew tap emarkou/grokfeed
 brew install grokfeed
 ```
+
+### pip
+
+```bash
+pip install grokfeed
+```
+
+### pipx (isolated install)
+
+```bash
+pipx install grokfeed
+```
+
+### From source
+
+Requires Python 3.11+.
+
+```bash
+git clone https://github.com/emarkou/grokfeed.git
+cd grokfeed
+pip install -e .
+```
+
+---
 
 On first run, a config file is created at `~/.grokfeed/config.toml`. Edit it to change subreddits:
 
@@ -37,20 +61,6 @@ lobsters_post_count = 25
 ```
 
 Changes take effect on next launch or press `r` to refresh.
-
-### From source
-
-Requires Python 3.11+. Recommended: use [uv](https://github.com/astral-sh/uv).
-
-```bash
-# with uv
-uv venv --python 3.13 .venv
-source .venv/bin/activate
-uv pip install -e .
-
-# or plain pip (Python 3.11+)
-pip install -e .
-```
 
 ## Run
 
