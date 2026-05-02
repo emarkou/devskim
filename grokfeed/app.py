@@ -160,7 +160,6 @@ class GrokFeedApp(App):
         self.push_screen(PostSplitModal(item, color))
 
     def action_refresh(self) -> None:
-        self._source_filter = ALL
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
     def action_cycle_source(self) -> None:
