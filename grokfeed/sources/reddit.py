@@ -24,20 +24,29 @@ class RedditPost:
         return f"r/{self.subreddit}"
 
 
+REDDIT_HOT_AFTER = "https://www.reddit.com/r/{subreddit}/hot.json?limit={limit}&after={after}"
+
+
 async def _fetch_subreddit(
-    client: httpx.AsyncClient, subreddit: str, count: int
-) -> list[RedditPost]:
+    client: httpx.AsyncClient, subreddit: str, count: int, after: str = "",
+) -> tuple[list[RedditPost], str]:
     posts: list[RedditPost] = []
+    new_after = ""
     try:
-        url = REDDIT_HOT.format(subreddit=subreddit, limit=count)
+        url = (
+            REDDIT_HOT_AFTER.format(subreddit=subreddit, limit=count, after=after)
+            if after
+            else REDDIT_HOT.format(subreddit=subreddit, limit=count)
+        )
         r = await client.get(url, timeout=15, headers={"User-Agent": USER_AGENT})
         r.raise_for_status()
         data = r.json()
-        for child in data.get("data", {}).get("children", []):
+        listing = data.get("data", {})
+        new_after = listing.get("after") or ""
+        for child in listing.get("children", []):
             d = child.get("data", {})
             selftext = d.get("selftext", "")
             permalink = f"https://reddit.com{d.get('permalink', '')}"
-            # self-posts: url == permalink; fall back to permalink for open-in-browser
             post_url = d.get("url") or permalink
             posts.append(RedditPost(
                 id=d.get("id", ""),
@@ -50,25 +59,29 @@ async def _fetch_subreddit(
             ))
     except Exception:
         pass
-    return posts
+    return posts, new_after
 
 
 async def fetch_reddit_posts(
     subreddits: list[str],
     count: int = 15,
     client: httpx.AsyncClient | None = None,
-) -> list[RedditPost]:
-    headers = {"User-Agent": USER_AGENT}
+    after: dict[str, str] | None = None,
+) -> tuple[list[RedditPost], dict[str, str]]:
+    after = after or {}
 
-    async def _run(c: httpx.AsyncClient) -> list[RedditPost]:
-        tasks = [_fetch_subreddit(c, sub, count) for sub in subreddits]
+    async def _run(c: httpx.AsyncClient) -> tuple[list[RedditPost], dict[str, str]]:
+        tasks = [_fetch_subreddit(c, sub, count, after.get(sub, "")) for sub in subreddits]
         results = await asyncio.gather(*tasks)
         posts: list[RedditPost] = []
-        for batch in results:
+        new_after: dict[str, str] = {}
+        for sub, (batch, cursor) in zip(subreddits, results):
             posts.extend(batch)
-        return posts
+            if cursor:
+                new_after[sub] = cursor
+        return posts, new_after
 
     if client is not None:
         return await _run(client)
-    async with httpx.AsyncClient(headers=headers) as c:
+    async with httpx.AsyncClient() as c:
         return await _run(c)
