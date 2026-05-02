@@ -10,7 +10,7 @@ from textual.widgets import Footer, Header, LoadingIndicator, Label, ListView
 from textual.containers import Container
 
 from .config import Config, load_cache, save_cache
-from .sources.hn import fetch_hn_stories
+from .sources.hn import fetch_hn_stories, fetch_hn_top_ids, fetch_hn_stories_by_ids
 from .sources.reddit import fetch_reddit_posts
 from .sources.lobsters import fetch_lobsters_posts
 from .widgets.feed import FeedList
@@ -67,6 +67,7 @@ class GrokFeedApp(App):
         Binding("enter", "open_or_body", "Open", priority=True),
         Binding("f", "cycle_source", "Filter"),
         Binding("r", "refresh", "Refresh"),
+        Binding("m", "load_more", "More"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -80,6 +81,9 @@ class GrokFeedApp(App):
         self._source_filter: str = ALL
         self._sources: list[str] = []
         self._loading = False
+        self._hn_ids: list[int] = []
+        self._hn_offset: int = 0
+        self._reddit_after: dict[str, str] = {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -111,16 +115,18 @@ class GrokFeedApp(App):
         self._set_status("Fetching stories…")
         try:
             async with httpx.AsyncClient() as client:
-                hn_task = asyncio.create_task(
-                    fetch_hn_stories(self.config.hn_story_count, client)
-                )
+                self._hn_ids = await fetch_hn_top_ids(client)
+                hn_ids = self._hn_ids[:self.config.hn_story_count]
+                self._hn_offset = len(hn_ids)
+
+                hn_task = asyncio.create_task(fetch_hn_stories_by_ids(hn_ids, client))
                 reddit_task = asyncio.create_task(
                     fetch_reddit_posts(self.config.subreddits, self.config.reddit_post_count, client)
                 )
                 lobsters_task = asyncio.create_task(
                     fetch_lobsters_posts(self.config.lobsters_post_count, client)
                 )
-                hn_stories, reddit_posts, lobsters_posts = await asyncio.gather(
+                hn_stories, (reddit_posts, self._reddit_after), lobsters_posts = await asyncio.gather(
                     hn_task, reddit_task, lobsters_task
                 )
         except Exception as e:
@@ -172,6 +178,44 @@ class GrokFeedApp(App):
             return
         color = get_source_color(item["source"], 0)
         self.push_screen(PostSplitModal(item, color))
+
+    def action_load_more(self) -> None:
+        self.run_worker(self._fetch_more(), exclusive=True, name="fetch-more")
+
+    async def _fetch_more(self) -> None:
+        self._set_status("Loading more…")
+        try:
+            async with httpx.AsyncClient() as client:
+                hn_ids = self._hn_ids[self._hn_offset:self._hn_offset + self.config.hn_story_count]
+                hn_task = asyncio.create_task(fetch_hn_stories_by_ids(hn_ids, client))
+                reddit_task = asyncio.create_task(
+                    fetch_reddit_posts(
+                        self.config.subreddits,
+                        self.config.reddit_post_count,
+                        client,
+                        after=self._reddit_after,
+                    )
+                )
+                hn_stories, (reddit_posts, new_after) = await asyncio.gather(hn_task, reddit_task)
+        except Exception as e:
+            self._set_status(f"Error: {e}")
+            return
+
+        self._hn_offset += len(hn_ids)
+        self._reddit_after = new_after
+
+        existing_ids = {i["post_id"] for i in self._all_items}
+        new_items: list[dict] = []
+        for s in hn_stories:
+            if str(s.id) not in existing_ids:
+                new_items.append({"title": s.title, "source": "HN", "score": s.score, "comments": s.comments, "url": s.url, "body": s.body, "post_id": str(s.id)})
+        for p in reddit_posts:
+            if p.id not in existing_ids:
+                new_items.append({"title": p.title, "source": p.source, "score": p.score, "comments": p.comments, "url": p.url, "body": p.body, "post_id": p.id, "subreddit": p.subreddit})
+
+        self._all_items.extend(new_items)
+        self._sources = [ALL] + list(dict.fromkeys(i["source"] for i in self._all_items))
+        self._apply_filter()
 
     def action_refresh(self) -> None:
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
