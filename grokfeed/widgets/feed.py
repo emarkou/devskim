@@ -12,9 +12,13 @@ from .story import StoryRow, source_color
 class FeedList(Widget):
     """Scrollable list of StoryRow widgets."""
 
+    COMPONENT_CLASSES = set()
+    SCROLLABLE = False
+
     DEFAULT_CSS = """
     FeedList {
         height: 1fr;
+        overflow: hidden hidden;
     }
     FeedList ListView {
         height: 1fr;
