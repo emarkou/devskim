@@ -1,17 +1,24 @@
+<div align="center">
+
 # grokfeed
 
+**Terminal feed reader for Hacker News, Reddit, and lobste.rs.**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version](https://img.shields.io/pypi/v/grokfeed)](https://pypi.org/project/grokfeed/)
+[![Python versions](https://img.shields.io/pypi/pyversions/grokfeed)](https://pypi.org/project/grokfeed/)
+[![GitHub release](https://img.shields.io/github/v/release/emarkou/grokfeed)](https://github.com/emarkou/grokfeed/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/emarkou/grokfeed/ci.yml?branch=main&label=CI)](https://github.com/emarkou/grokfeed/actions/workflows/ci.yml)
 
-Terminal feed reader for Hacker News, Reddit, and lobste.rs.
-
+</div>
 
 ## Features
 
 - Unified scrollable feed from HN, Reddit subreddits, and lobste.rs
 - Color-coded by source: HN orange, lobste.rs red, subreddits in a cycling palette
 - Read text posts and Ask HN inline — no browser needed
-- Comments viewer with nested replies (up to 2 levels)
-- Filter feed by source, refresh on demand
+- Split view with post body and threaded comments side by side
+- Filter feed by source, refresh on demand, paginate with `m`
 - Config file at `~/.grokfeed/config.toml` — created automatically on first run
 
 ## Install
@@ -58,15 +65,10 @@ subreddits = ["programming", "ClaudeAI", "machinelearning"]
 hn_story_count = 30
 reddit_post_count = 15
 lobsters_post_count = 25
+cache_ttl_minutes = 10
 ```
 
-Changes take effect on next launch or press `r` to refresh.
-
-## Run
-
-```bash
-grokfeed
-```
+Run `grokfeed` — changes take effect on next launch or press `r` to refresh.
 
 ## Demo
 
@@ -80,42 +82,33 @@ grokfeed
 |-----|--------|
 | `j` / `↓` | Move down |
 | `k` / `↑` | Move up |
-| `Enter` | Open post body (text posts) or URL in browser (link posts) |
-| `c` | Open comments |
+| `Enter` | Open post + comments split view |
 | `f` | Cycle source filter (All → HN → r/sub → lobste.rs → …) |
+| `m` | Load more stories |
 | `r` | Refresh all sources |
 | `q` | Quit |
 
-### Post body modal
+### Split view
 
 | Key | Action |
 |-----|--------|
 | `j` / `↓` | Scroll down |
 | `k` / `↑` | Scroll up |
-| `c` | Open comments for this post |
+| `Tab` | Switch between post and comments pane |
 | `o` | Open URL in browser |
-| `q` / `Esc` | Close |
-
-### Comments modal
-
-| Key | Action |
-|-----|--------|
-| `j` / `↓` | Scroll down |
-| `k` / `↑` | Scroll up |
 | `q` / `Esc` | Close |
 
 ## Config
 
 `~/.grokfeed/config.toml` — created on first run with defaults.
 
-```toml
-subreddits = ["programming", "python", "machinelearning"]
-hn_story_count = 30
-reddit_post_count = 15
-lobsters_post_count = 25
-```
-
-Edit to add or remove subreddits. Changes take effect on next launch or `r` refresh.
+| Key | Default | Description |
+|-----|---------|-------------|
+| `subreddits` | `["programming", "python", "machinelearning"]` | Subreddits to include |
+| `hn_story_count` | `30` | HN stories per fetch |
+| `reddit_post_count` | `15` | Posts per subreddit per fetch |
+| `lobsters_post_count` | `25` | lobste.rs posts per fetch |
+| `cache_ttl_minutes` | `10` | Minutes before refreshing cache |
 
 ## Tech stack
 
