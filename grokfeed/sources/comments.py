@@ -6,6 +6,7 @@ import re as _re
 from dataclasses import dataclass
 
 import httpx
+import orjson
 
 USER_AGENT = "grokfeed:v0.1.0 (terminal feed reader)"
 HN_ITEM = "https://hacker-news.firebaseio.com/v0/item/{}.json"
@@ -36,7 +37,7 @@ async def _fetch_hn_comment(
         try:
             r = await client.get(HN_ITEM.format(cid), timeout=10)
             r.raise_for_status()
-            d = r.json()
+            d = orjson.loads(r.content)
             if not d or d.get("deleted") or d.get("dead") or d.get("type") != "comment":
                 return None
             raw = d.get("text", "")
@@ -55,7 +56,7 @@ async def fetch_hn_comments(story_id: int, limit: int = 30) -> list[Comment]:
     async with httpx.AsyncClient() as client:
         r = await client.get(HN_ITEM.format(story_id), timeout=10)
         r.raise_for_status()
-        d = r.json()
+        d = orjson.loads(r.content)
         kids = (d.get("kids") or [])[:limit]
         tasks = [_fetch_hn_comment(client, sem, kid) for kid in kids]
         results = await asyncio.gather(*tasks)
@@ -94,7 +95,7 @@ async def fetch_reddit_comments(subreddit: str, post_id: str) -> list[Comment]:
         try:
             r = await client.get(url, timeout=15)
             r.raise_for_status()
-            data = r.json()
+            data = orjson.loads(r.content)
         except Exception:
             return []
     # data is [post_listing, comments_listing]
@@ -113,7 +114,7 @@ async def fetch_lobsters_comments(short_id: str) -> list[Comment]:
         try:
             r = await client.get(url, timeout=15)
             r.raise_for_status()
-            data = r.json()
+            data = orjson.loads(r.content)
         except Exception:
             return []
     out: list[Comment] = []

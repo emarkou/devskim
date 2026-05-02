@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import json
 import time
+
+import orjson
 
 try:
     import tomllib
@@ -54,7 +55,7 @@ def load_cache(ttl_minutes: int) -> list[dict] | None:
     if not CACHE_PATH.exists():
         return None
     try:
-        data = json.loads(CACHE_PATH.read_text())
+        data = orjson.loads(CACHE_PATH.read_bytes())
         if time.time() - data["ts"] > ttl_minutes * 60:
             return None
         return data["items"]
@@ -65,6 +66,6 @@ def load_cache(ttl_minutes: int) -> list[dict] | None:
 def save_cache(items: list[dict]) -> None:
     try:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        CACHE_PATH.write_text(json.dumps({"ts": time.time(), "items": items}))
+        CACHE_PATH.write_bytes(orjson.dumps({"ts": time.time(), "items": items}))
     except Exception:
         pass

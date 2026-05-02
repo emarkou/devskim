@@ -5,6 +5,7 @@ import re as _re
 from dataclasses import dataclass, field
 
 import httpx
+import orjson
 
 
 def _strip_html(raw: str) -> str:
@@ -35,7 +36,7 @@ async def fetch_lobsters_posts(
         try:
             r = await c.get(LOBSTERS_URL, timeout=15, headers={"User-Agent": USER_AGENT})
             r.raise_for_status()
-            data = r.json()
+            data = orjson.loads(r.content)
         except Exception:
             return []
         posts: list[LobstersPost] = []
