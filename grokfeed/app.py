@@ -13,8 +13,7 @@ from .sources.hn import fetch_hn_stories
 from .sources.reddit import fetch_reddit_posts
 from .sources.lobsters import fetch_lobsters_posts
 from .widgets.feed import FeedList
-from .widgets.content_modal import ContentModal
-from .widgets.comments_modal import CommentsModal
+from .widgets.post_split_modal import PostSplitModal
 from .widgets.story import source_color as get_source_color
 
 # Source filter sentinel
@@ -114,7 +113,7 @@ class GrokFeedApp(App):
         loading.display = False
         feed.display = True
         count = len(items)
-        self._set_status(f"{count} stories loaded  •  Enter = open  •  c = comments  •  f = filter  •  r = refresh")
+        self._set_status(f"{count} stories loaded  •  Enter/c = open  •  f = filter  •  r = refresh")
 
     def _apply_filter(self) -> None:
         feed = self.query_one(FeedList)
@@ -138,19 +137,15 @@ class GrokFeedApp(App):
         item = feed.current_item()
         if not item:
             return
-        body = item.get("body", "")
-        if body:
-            color = get_source_color(item["source"], 0)
-            self.push_screen(ContentModal(item, color))
-        elif item.get("url"):
-            self.open_url(item["url"])
+        color = get_source_color(item["source"], 0)
+        self.push_screen(PostSplitModal(item, color))
 
     def action_open_comments(self) -> None:
         item = self.query_one(FeedList).current_item()
         if not item:
             return
         color = get_source_color(item["source"], 0)
-        self.push_screen(CommentsModal(item, color))
+        self.push_screen(PostSplitModal(item, color))
 
     def action_refresh(self) -> None:
         self._source_filter = ALL
