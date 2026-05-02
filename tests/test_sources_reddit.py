@@ -1,5 +1,6 @@
 import pytest
 from pytest_httpx import HTTPXMock
+from urllib.parse import urlparse
 
 from grokfeed.sources.reddit import REDDIT_HOT, REDDIT_HOT_AFTER, fetch_reddit_posts
 
@@ -54,7 +55,9 @@ async def test_fetch_reddit_posts_self_post_uses_permalink(httpx_mock: HTTPXMock
     )
     posts, after = await fetch_reddit_posts(["python"], count=5)
     assert posts[0].body == "body text"
-    assert "reddit.com" in posts[0].url
+    parsed = urlparse(posts[0].url)
+    host = parsed.hostname or ""
+    assert host == "reddit.com" or host.endswith(".reddit.com")
     assert after == {}
 
 
