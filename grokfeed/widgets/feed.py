@@ -1,24 +1,15 @@
 from __future__ import annotations
 
-from textual.app import ComposeResult
-from textual.reactive import reactive
-from textual.scroll_view import ScrollView
-from textual.widget import Widget
-from textual.widgets import ListView, ListItem, Label
+from textual.widgets import ListView, ListItem
 
 from .story import StoryRow, source_color
 
 
-class FeedList(Widget):
+class FeedList(ListView):
     """Scrollable list of StoryRow widgets."""
 
     DEFAULT_CSS = """
     FeedList {
-        height: 1fr;
-        overflow-x: hidden;
-        overflow-y: hidden;
-    }
-    FeedList ListView {
         height: 1fr;
         background: $surface;
     }
@@ -37,15 +28,10 @@ class FeedList(Widget):
         self._items: list[dict] = []
         self._subreddit_color_map: dict[str, str] = {}
 
-    def compose(self) -> ComposeResult:
-        yield ListView()
-
     def load_items(self, items: list[dict]) -> None:
-        """items: list of dicts with keys: title, source, score, comments, url"""
         self._items = items
         self._build_color_map(items)
-        lv = self.query_one(ListView)
-        lv.clear()
+        self.clear()
         for item in items:
             color = self._color_for(item["source"])
             row = StoryRow(
@@ -56,9 +42,9 @@ class FeedList(Widget):
                 url=item["url"],
                 color=color,
             )
-            lv.append(ListItem(row))
+            self.append(ListItem(row))
         if items:
-            lv.index = 0
+            self.index = 0
 
     def _build_color_map(self, items: list[dict]) -> None:
         idx = 0
@@ -74,10 +60,8 @@ class FeedList(Widget):
         return self._subreddit_color_map.get(source, source_color(source, 0))
 
     def current_item(self) -> dict | None:
-        lv = self.query_one(ListView)
-        idx = lv.index
-        if idx is not None and 0 <= idx < len(self._items):
-            return self._items[idx]
+        if self.index is not None and 0 <= self.index < len(self._items):
+            return self._items[self.index]
         return None
 
     def current_url(self) -> str | None:
@@ -85,7 +69,7 @@ class FeedList(Widget):
         return item["url"] if item else None
 
     def action_cursor_down(self) -> None:
-        self.query_one(ListView).action_cursor_down()
+        super().action_cursor_down()
 
     def action_cursor_up(self) -> None:
-        self.query_one(ListView).action_cursor_up()
+        super().action_cursor_up()
