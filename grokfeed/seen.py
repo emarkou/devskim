@@ -21,8 +21,8 @@ def load_seen() -> set[str]:
         return set()
 
 
-def mark_seen(post_id: str) -> None:
-    """Record post_id as seen, pruning entries older than the TTL."""
+def mark_seen(post_id: str) -> bool:
+    """Record post_id as seen, pruning entries older than the TTL. Returns False on write failure."""
     try:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         data: dict[str, float] = {}
@@ -35,5 +35,6 @@ def mark_seen(post_id: str) -> None:
         data = {pid: ts for pid, ts in data.items() if ts >= cutoff}
         data[post_id] = time.time()
         SEEN_PATH.write_text(json.dumps(data))
+        return True
     except Exception:
-        pass
+        return False

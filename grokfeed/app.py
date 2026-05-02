@@ -221,7 +221,8 @@ class GrokFeedApp(App):
         if post_id:
             seen_key = f"{item.get('source', 'unknown')}:{post_id}"
             self._seen.add(seen_key)
-            mark_seen(seen_key)
+            if not mark_seen(seen_key):
+                self._set_status("Warning: could not write to seen.json — read state not persisted")
             feed.mark_current_seen()
         color = get_source_color(item["source"], 0)
         self.push_screen(PostSplitModal(item, color))
