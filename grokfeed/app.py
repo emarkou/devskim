@@ -42,6 +42,7 @@ class GrokFeedApp(App):
     CSS = """
     Screen {
         background: $surface;
+        overflow-y: hidden;
     }
     #status-bar {
         height: 1;
