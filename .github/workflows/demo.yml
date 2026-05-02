@@ -14,15 +14,20 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
-      - name: Install ffmpeg
-        run: sudo apt-get install -y ffmpeg
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y ffmpeg
+          curl -fsSL https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 \
+            -o ttyd && sudo install -m755 ttyd /usr/local/bin/ttyd
+          curl -fsSL https://github.com/charmbracelet/vhs/releases/latest/download/vhs_Linux_x86_64.tar.gz \
+            | tar -xz vhs && sudo install -m755 vhs /usr/local/bin/vhs
 
       - name: Install grokfeed
         run: uv tool install .
 
-      - uses: charmbracelet/vhs-action@v2.1.0
-        with:
-          path: demo.tape
+      - name: Record demo
+        run: vhs demo.tape
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
