@@ -12,6 +12,7 @@ class FeedList(ListView):
     FeedList {
         height: 1fr;
         background: $surface;
+        scrollbar-size-vertical: 0;
     }
     FeedList ListItem {
         height: 3;

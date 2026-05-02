@@ -124,7 +124,9 @@ class PostSplitModal(ModalScreen):
                         else:
                             yield Label("[dim]No content.[/]")
                 with Vertical(id="comments-panel"):
-                    yield Label("  COMMENTS", id="pane-label-comments", classes="pane-label")
+                    yield Label(
+                        "  COMMENTS", id="pane-label-comments", classes="pane-label"
+                    )
                     with ScrollableContainer(id="comments-scroll"):
                         yield Label("Fetching comments…", id="loading-comments")
             yield Label(

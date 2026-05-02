@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 
 import httpx
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.widgets import Footer, Header, LoadingIndicator, Label, ListView
+from textual.widgets import Footer, Header, LoadingIndicator, Label
 from textual.containers import Container
 
 from .config import Config, load_cache, save_cache
-from .sources.hn import fetch_hn_stories, fetch_hn_top_ids, fetch_hn_stories_by_ids
+from .sources.hn import fetch_hn_top_ids, fetch_hn_stories_by_ids
 from .sources.reddit import fetch_reddit_posts
 from .sources.lobsters import fetch_lobsters_posts
 from .widgets.feed import FeedList
@@ -24,6 +23,7 @@ ALL = "all"
 def _interleave_by_score(items: list[dict]) -> list[dict]:
     """Sort items by score normalized within each source (0–1 scale)."""
     from collections import defaultdict
+
     groups: dict[str, list[dict]] = defaultdict(list)
     for item in items:
         groups[item["source"]].append(item)
@@ -94,6 +94,7 @@ class GrokFeedApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.screen.styles.overflow_y = "hidden"
         self.query_one("#feed").display = False
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
@@ -117,19 +118,23 @@ class GrokFeedApp(App):
         try:
             async with httpx.AsyncClient() as client:
                 self._hn_ids = await fetch_hn_top_ids(client)
-                hn_ids = self._hn_ids[:self.config.hn_story_count]
+                hn_ids = self._hn_ids[: self.config.hn_story_count]
                 self._hn_offset = len(hn_ids)
 
                 hn_task = asyncio.create_task(fetch_hn_stories_by_ids(hn_ids, client))
                 reddit_task = asyncio.create_task(
-                    fetch_reddit_posts(self.config.subreddits, self.config.reddit_post_count, client)
+                    fetch_reddit_posts(
+                        self.config.subreddits, self.config.reddit_post_count, client
+                    )
                 )
                 lobsters_task = asyncio.create_task(
                     fetch_lobsters_posts(self.config.lobsters_post_count, client)
                 )
-                hn_stories, (reddit_posts, self._reddit_after), lobsters_posts = await asyncio.gather(
-                    hn_task, reddit_task, lobsters_task
-                )
+                (
+                    hn_stories,
+                    (reddit_posts, self._reddit_after),
+                    lobsters_posts,
+                ) = await asyncio.gather(hn_task, reddit_task, lobsters_task)
         except Exception as e:
             self._set_status(f"Error: {e}")
             loading.display = False
@@ -137,11 +142,42 @@ class GrokFeedApp(App):
 
         items: list[dict] = []
         for s in hn_stories:
-            items.append({"title": s.title, "source": "HN", "score": s.score, "comments": s.comments, "url": s.url, "body": s.body, "post_id": str(s.id)})
+            items.append(
+                {
+                    "title": s.title,
+                    "source": "HN",
+                    "score": s.score,
+                    "comments": s.comments,
+                    "url": s.url,
+                    "body": s.body,
+                    "post_id": str(s.id),
+                }
+            )
         for p in reddit_posts:
-            items.append({"title": p.title, "source": p.source, "score": p.score, "comments": p.comments, "url": p.url, "body": p.body, "post_id": p.id, "subreddit": p.subreddit})
+            items.append(
+                {
+                    "title": p.title,
+                    "source": p.source,
+                    "score": p.score,
+                    "comments": p.comments,
+                    "url": p.url,
+                    "body": p.body,
+                    "post_id": p.id,
+                    "subreddit": p.subreddit,
+                }
+            )
         for lp in lobsters_posts:
-            items.append({"title": lp.title, "source": lp.source, "score": lp.score, "comments": lp.comments, "url": lp.url, "body": lp.body, "post_id": lp.id})
+            items.append(
+                {
+                    "title": lp.title,
+                    "source": lp.source,
+                    "score": lp.score,
+                    "comments": lp.comments,
+                    "url": lp.url,
+                    "body": lp.body,
+                    "post_id": lp.id,
+                }
+            )
 
         self._all_items = items
         self._sources = [ALL] + list(dict.fromkeys(i["source"] for i in items))
@@ -187,7 +223,9 @@ class GrokFeedApp(App):
         self._set_status("Loading more…")
         try:
             async with httpx.AsyncClient() as client:
-                hn_ids = self._hn_ids[self._hn_offset:self._hn_offset + self.config.hn_story_count]
+                hn_ids = self._hn_ids[
+                    self._hn_offset : self._hn_offset + self.config.hn_story_count
+                ]
                 hn_task = asyncio.create_task(fetch_hn_stories_by_ids(hn_ids, client))
                 reddit_task = asyncio.create_task(
                     fetch_reddit_posts(
@@ -197,7 +235,9 @@ class GrokFeedApp(App):
                         after=self._reddit_after,
                     )
                 )
-                hn_stories, (reddit_posts, new_after) = await asyncio.gather(hn_task, reddit_task)
+                hn_stories, (reddit_posts, new_after) = await asyncio.gather(
+                    hn_task, reddit_task
+                )
         except Exception as e:
             self._set_status(f"Error: {e}")
             return
@@ -209,13 +249,36 @@ class GrokFeedApp(App):
         new_items: list[dict] = []
         for s in hn_stories:
             if str(s.id) not in existing_ids:
-                new_items.append({"title": s.title, "source": "HN", "score": s.score, "comments": s.comments, "url": s.url, "body": s.body, "post_id": str(s.id)})
+                new_items.append(
+                    {
+                        "title": s.title,
+                        "source": "HN",
+                        "score": s.score,
+                        "comments": s.comments,
+                        "url": s.url,
+                        "body": s.body,
+                        "post_id": str(s.id),
+                    }
+                )
         for p in reddit_posts:
             if p.id not in existing_ids:
-                new_items.append({"title": p.title, "source": p.source, "score": p.score, "comments": p.comments, "url": p.url, "body": p.body, "post_id": p.id, "subreddit": p.subreddit})
+                new_items.append(
+                    {
+                        "title": p.title,
+                        "source": p.source,
+                        "score": p.score,
+                        "comments": p.comments,
+                        "url": p.url,
+                        "body": p.body,
+                        "post_id": p.id,
+                        "subreddit": p.subreddit,
+                    }
+                )
 
         self._all_items.extend(new_items)
-        self._sources = [ALL] + list(dict.fromkeys(i["source"] for i in self._all_items))
+        self._sources = [ALL] + list(
+            dict.fromkeys(i["source"] for i in self._all_items)
+        )
         self._apply_filter()
 
     def action_refresh(self) -> None:

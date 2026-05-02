@@ -9,7 +9,9 @@ import httpx
 
 USER_AGENT = "grokfeed:v0.1.0 (terminal feed reader)"
 HN_ITEM = "https://hacker-news.firebaseio.com/v0/item/{}.json"
-REDDIT_COMMENTS = "https://www.reddit.com/r/{subreddit}/comments/{post_id}.json?limit=50&depth=3"
+REDDIT_COMMENTS = (
+    "https://www.reddit.com/r/{subreddit}/comments/{post_id}.json?limit=50&depth=3"
+)
 LOBSTERS_POST = "https://lobste.rs/s/{short_id}.json"
 
 
@@ -28,6 +30,7 @@ def _strip_html(raw: str) -> str:
 
 
 # ── HN ────────────────────────────────────────────────────────────────────────
+
 
 async def _fetch_hn_comment(
     client: httpx.AsyncClient, sem: asyncio.Semaphore, cid: int
@@ -64,7 +67,10 @@ async def fetch_hn_comments(story_id: int, limit: int = 30) -> list[Comment]:
 
 # ── Reddit ─────────────────────────────────────────────────────────────────────
 
-def _flatten_reddit(children: list, depth: int = 0, max_depth: int = 2) -> list[Comment]:
+
+def _flatten_reddit(
+    children: list, depth: int = 0, max_depth: int = 2
+) -> list[Comment]:
     out: list[Comment] = []
     for child in children:
         if child.get("kind") != "t1":
@@ -73,12 +79,14 @@ def _flatten_reddit(children: list, depth: int = 0, max_depth: int = 2) -> list[
         body = d.get("body", "")
         if body in ("[deleted]", "[removed]", ""):
             continue
-        out.append(Comment(
-            author=d.get("author", "[deleted]"),
-            score=d.get("score", 0),
-            body=body,
-            depth=depth,
-        ))
+        out.append(
+            Comment(
+                author=d.get("author", "[deleted]"),
+                score=d.get("score", 0),
+                body=body,
+                depth=depth,
+            )
+        )
         if depth < max_depth:
             replies = d.get("replies", "")
             if isinstance(replies, dict):
@@ -106,6 +114,7 @@ async def fetch_reddit_comments(subreddit: str, post_id: str) -> list[Comment]:
 
 # ── lobste.rs ──────────────────────────────────────────────────────────────────
 
+
 async def fetch_lobsters_comments(short_id: str) -> list[Comment]:
     headers = {"User-Agent": USER_AGENT}
     url = LOBSTERS_POST.format(short_id=short_id)
@@ -123,17 +132,22 @@ async def fetch_lobsters_comments(short_id: str) -> list[Comment]:
         if not body:
             continue
         raw_user = c.get("commenting_user", "?")
-        author = raw_user if isinstance(raw_user, str) else raw_user.get("username", "?")
-        out.append(Comment(
-            author=author,
-            score=c.get("score", 0),
-            body=body,
-            depth=c.get("indent_level", 0),
-        ))
+        author = (
+            raw_user if isinstance(raw_user, str) else raw_user.get("username", "?")
+        )
+        out.append(
+            Comment(
+                author=author,
+                score=c.get("score", 0),
+                body=body,
+                depth=c.get("indent_level", 0),
+            )
+        )
     return out
 
 
 # ── Dispatcher ─────────────────────────────────────────────────────────────────
+
 
 async def fetch_comments(item: dict) -> list[Comment]:
     source = item.get("source", "")
