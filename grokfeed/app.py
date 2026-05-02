@@ -39,7 +39,8 @@ def _interleave_by_score(items: list[dict]) -> list[dict]:
         span = hi - lo or 1
         for item in source_items:
             norm = (item["score"] - lo) / span
-            age_hours = max(0.0, now - item.get("created_at", now)) / 3600
+            created_at = item.get("created_at") or now
+            age_hours = max(0.0, now - created_at) / 3600
             item["_norm_score"] = norm * math.exp(-DECAY_LAMBDA * age_hours)
     return sorted(items, key=lambda i: i.get("_norm_score", 0), reverse=True)
 
