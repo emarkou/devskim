@@ -20,8 +20,10 @@ jobs:
           sudo apt-get install -y ffmpeg
           curl -fsSL https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 \
             -o ttyd && sudo install -m755 ttyd /usr/local/bin/ttyd
-          curl -fsSL https://github.com/charmbracelet/vhs/releases/latest/download/vhs_Linux_x86_64.tar.gz \
-            | tar -xz vhs && sudo install -m755 vhs /usr/local/bin/vhs
+          VHS_VERSION=$(curl -s https://api.github.com/repos/charmbracelet/vhs/releases/latest \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'][1:])")
+          curl -fsSL "https://github.com/charmbracelet/vhs/releases/download/v${VHS_VERSION}/vhs_${VHS_VERSION}_amd64.deb" \
+            -o vhs.deb && sudo dpkg -i vhs.deb
 
       - name: Install grokfeed
         run: uv tool install .
