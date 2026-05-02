@@ -7,7 +7,7 @@ on:
     tags-ignore: ["*"]
 
 jobs:
-  vhs:
+  record:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,7 +15,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
 
       - name: Install grokfeed
-        run: uv pip install . --system
+        run: uv tool install .
 
       - uses: charmbracelet/vhs-action@v2.1.0
         with:
