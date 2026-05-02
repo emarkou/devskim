@@ -87,9 +87,14 @@ def test_time_decay_cross_source_newer_source_wins():
 
 
 def test_missing_created_at_no_decay_penalty():
-    # Items without created_at key use age=0 (no decay penalty)
+    # item_no_ts has no created_at key → treated as age=0 → no decay penalty
+    # item_with_ts has lower score but a current timestamp → also age≈0
+    # With different scores span>0, so norm is computed and decay is exercised.
+    # The higher-scoring item_no_ts should have _norm_score >= item_with_ts.
+    now = int(time.time())
     item_no_ts = {"source": "HN", "score": 100, "title": "", "url": "", "comments": 0}
-    item_with_ts = _item("HN", 100, created_at=int(time.time()))
+    item_with_ts = _item("HN", 50, created_at=now)
     result = _interleave_by_score([item_no_ts, item_with_ts])
-    # Both have same score within same source → span=0 → norm=0 → _norm_score=0
-    assert all(r["_norm_score"] == 0.0 for r in result)
+    no_ts_result = next(r for r in result if r["score"] == 100)
+    with_ts_result = next(r for r in result if r["score"] == 50)
+    assert no_ts_result["_norm_score"] >= with_ts_result["_norm_score"]
