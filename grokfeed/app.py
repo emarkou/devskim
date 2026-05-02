@@ -219,8 +219,9 @@ class GrokFeedApp(App):
             return
         post_id = item.get("post_id", "")
         if post_id:
-            self._seen.add(post_id)
-            mark_seen(post_id)
+            seen_key = f"{item.get('source', 'unknown')}:{post_id}"
+            self._seen.add(seen_key)
+            mark_seen(seen_key)
             feed.mark_current_seen()
         color = get_source_color(item["source"], 0)
         self.push_screen(PostSplitModal(item, color))

@@ -43,7 +43,7 @@ class FeedList(ListView):
                 comments=item["comments"],
                 url=item["url"],
                 color=color,
-                seen=item.get("post_id", "") in seen_ids,
+                seen=f"{item.get('source', 'unknown')}:{item.get('post_id', '')}" in seen_ids,
             )
             self.append(ListItem(row))
         if items:
