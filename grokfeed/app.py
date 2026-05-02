@@ -3,12 +3,13 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+import httpx
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import Footer, Header, LoadingIndicator, Label, ListView
 from textual.containers import Container
 
-from .config import Config
+from .config import Config, load_cache, save_cache
 from .sources.hn import fetch_hn_stories
 from .sources.reddit import fetch_reddit_posts
 from .sources.lobsters import fetch_lobsters_posts
@@ -77,21 +78,39 @@ class GrokFeedApp(App):
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
     async def _load_all(self) -> None:
-        self._set_status("Fetching stories…")
         loading = self.query_one("#loading")
         feed = self.query_one(FeedList)
         loading.display = True
         feed.display = False
 
+        # Serve from cache if fresh enough
+        cached = load_cache(self.config.cache_ttl_minutes)
+        if cached:
+            self._all_items = cached
+            self._sources = [ALL] + list(dict.fromkeys(i["source"] for i in cached))
+            self._apply_filter()
+            loading.display = False
+            feed.display = True
+            self._set_status(
+                f"{len(cached)} stories (cached)  •  Enter = open  •  f = filter  •  r = refresh"
+            )
+            return
+
+        self._set_status("Fetching stories…")
         try:
-            hn_task = asyncio.create_task(fetch_hn_stories(self.config.hn_story_count))
-            reddit_task = asyncio.create_task(
-                fetch_reddit_posts(self.config.subreddits, self.config.reddit_post_count)
-            )
-            lobsters_task = asyncio.create_task(fetch_lobsters_posts(self.config.lobsters_post_count))
-            hn_stories, reddit_posts, lobsters_posts = await asyncio.gather(
-                hn_task, reddit_task, lobsters_task
-            )
+            async with httpx.AsyncClient() as client:
+                hn_task = asyncio.create_task(
+                    fetch_hn_stories(self.config.hn_story_count, client)
+                )
+                reddit_task = asyncio.create_task(
+                    fetch_reddit_posts(self.config.subreddits, self.config.reddit_post_count, client)
+                )
+                lobsters_task = asyncio.create_task(
+                    fetch_lobsters_posts(self.config.lobsters_post_count, client)
+                )
+                hn_stories, reddit_posts, lobsters_posts = await asyncio.gather(
+                    hn_task, reddit_task, lobsters_task
+                )
         except Exception as e:
             self._set_status(f"Error: {e}")
             loading.display = False
@@ -108,6 +127,7 @@ class GrokFeedApp(App):
         self._all_items = items
         self._sources = [ALL] + list(dict.fromkeys(i["source"] for i in items))
         self._apply_filter()
+        save_cache(items)
 
         loading.display = False
         feed.display = True

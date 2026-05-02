@@ -1,25 +1,17 @@
 from __future__ import annotations
 
-import typer
-from rich.console import Console
-
-from .config import load_config, CONFIG_PATH
-from .app import GrokFeedApp
-
-app = typer.Typer(help="Hacker News + Reddit terminal feed viewer.", add_completion=False)
-console = Console()
+import click
 
 
-@app.command()
-def run() -> None:
-    """Launch the grokfeed TUI."""
+@click.command()
+def app() -> None:
+    """Hacker News + Reddit terminal feed viewer."""
+    from .config import load_config, CONFIG_PATH
+    from .app import GrokFeedApp
+
     config, created = load_config()
     if created:
-        console.print(
-            f"[bold green]Config created:[/] {CONFIG_PATH}\n"
-            "Edit it to add/remove subreddits.",
-            highlight=False,
-        )
+        click.echo(f"Config created: {CONFIG_PATH}\nEdit it to add/remove subreddits.")
     GrokFeedApp(config).run()
 
 

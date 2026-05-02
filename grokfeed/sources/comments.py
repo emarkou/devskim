@@ -51,17 +51,14 @@ async def _fetch_hn_comment(
 
 
 async def fetch_hn_comments(story_id: int, limit: int = 30) -> list[Comment]:
+    sem = asyncio.Semaphore(10)
     async with httpx.AsyncClient() as client:
         r = await client.get(HN_ITEM.format(story_id), timeout=10)
         r.raise_for_status()
         d = r.json()
         kids = (d.get("kids") or [])[:limit]
-
-    sem = asyncio.Semaphore(10)
-    async with httpx.AsyncClient() as client:
         tasks = [_fetch_hn_comment(client, sem, kid) for kid in kids]
         results = await asyncio.gather(*tasks)
-
     return [c for c in results if c is not None]
 
 

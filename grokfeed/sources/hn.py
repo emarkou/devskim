@@ -51,11 +51,24 @@ async def _fetch_item(client: httpx.AsyncClient, item_id: int) -> Story | None:
         return None
 
 
-async def fetch_hn_stories(count: int = 30) -> list[Story]:
-    async with httpx.AsyncClient() as client:
-        r = await client.get(HN_TOP, timeout=10)
+async def fetch_hn_stories(
+    count: int = 30,
+    client: httpx.AsyncClient | None = None,
+) -> list[Story]:
+    async def _run(c: httpx.AsyncClient) -> list[Story]:
+        sem = asyncio.Semaphore(10)
+        r = await c.get(HN_TOP, timeout=10)
         r.raise_for_status()
         ids = r.json()[:count]
-        tasks = [_fetch_item(client, i) for i in ids]
-        results = await asyncio.gather(*tasks)
-    return [s for s in results if s is not None]
+
+        async def _bounded(item_id: int) -> Story | None:
+            async with sem:
+                return await _fetch_item(c, item_id)
+
+        results = await asyncio.gather(*[_bounded(i) for i in ids])
+        return [s for s in results if s is not None]
+
+    if client is not None:
+        return await _run(client)
+    async with httpx.AsyncClient() as c:
+        return await _run(c)

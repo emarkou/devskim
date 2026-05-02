@@ -30,7 +30,7 @@ async def _fetch_subreddit(
     posts: list[RedditPost] = []
     try:
         url = REDDIT_HOT.format(subreddit=subreddit, limit=count)
-        r = await client.get(url, timeout=15)
+        r = await client.get(url, timeout=15, headers={"User-Agent": USER_AGENT})
         r.raise_for_status()
         data = r.json()
         for child in data.get("data", {}).get("children", []):
@@ -53,12 +53,22 @@ async def _fetch_subreddit(
     return posts
 
 
-async def fetch_reddit_posts(subreddits: list[str], count: int = 15) -> list[RedditPost]:
+async def fetch_reddit_posts(
+    subreddits: list[str],
+    count: int = 15,
+    client: httpx.AsyncClient | None = None,
+) -> list[RedditPost]:
     headers = {"User-Agent": USER_AGENT}
-    async with httpx.AsyncClient(headers=headers) as client:
-        tasks = [_fetch_subreddit(client, sub, count) for sub in subreddits]
+
+    async def _run(c: httpx.AsyncClient) -> list[RedditPost]:
+        tasks = [_fetch_subreddit(c, sub, count) for sub in subreddits]
         results = await asyncio.gather(*tasks)
-    posts: list[RedditPost] = []
-    for batch in results:
-        posts.extend(batch)
-    return posts
+        posts: list[RedditPost] = []
+        for batch in results:
+            posts.extend(batch)
+        return posts
+
+    if client is not None:
+        return await _run(client)
+    async with httpx.AsyncClient(headers=headers) as c:
+        return await _run(c)
