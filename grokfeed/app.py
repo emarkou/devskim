@@ -49,7 +49,6 @@ class GrokFeedApp(App):
         Binding("down", "cursor_down", "Down", show=False),
         Binding("up", "cursor_up", "Up", show=False),
         Binding("enter", "open_or_body", "Open", priority=True),
-        Binding("c", "open_comments", "Comments"),
         Binding("f", "cycle_source", "Filter"),
         Binding("r", "refresh", "Refresh"),
         Binding("q", "quit", "Quit"),
@@ -113,7 +112,7 @@ class GrokFeedApp(App):
         loading.display = False
         feed.display = True
         count = len(items)
-        self._set_status(f"{count} stories loaded  •  Enter/c = open  •  f = filter  •  r = refresh")
+        self._set_status(f"{count} stories loaded  •  Enter = open  •  f = filter  •  r = refresh")
 
     def _apply_filter(self) -> None:
         feed = self.query_one(FeedList)
@@ -135,13 +134,6 @@ class GrokFeedApp(App):
     def action_open_or_body(self) -> None:
         feed = self.query_one(FeedList)
         item = feed.current_item()
-        if not item:
-            return
-        color = get_source_color(item["source"], 0)
-        self.push_screen(PostSplitModal(item, color))
-
-    def action_open_comments(self) -> None:
-        item = self.query_one(FeedList).current_item()
         if not item:
             return
         color = get_source_color(item["source"], 0)
