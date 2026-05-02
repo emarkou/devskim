@@ -1,0 +1,14 @@
+changelog:
+  categories:
+    - title: "What's New"
+      labels:
+        - enhancement
+    - title: Bug Fixes
+      labels:
+        - bug
+    - title: Performance
+      labels:
+        - performance
+    - title: Maintenance
+      labels:
+        - chore
