@@ -20,6 +20,8 @@ USER_AGENT = "grokfeed:v0.1.0 (terminal feed reader)"
 
 @dataclass
 class LobstersPost:
+    """A lobste.rs story from the hottest listing."""
+
     id: str
     title: str
     url: str
@@ -34,6 +36,8 @@ async def fetch_lobsters_posts(
     count: int = 25,
     client: httpx.AsyncClient | None = None,
 ) -> list[LobstersPost]:
+    """Fetch the top N hottest posts from lobste.rs."""
+
     async def _run(c: httpx.AsyncClient) -> list[LobstersPost]:
         try:
             r = await c.get(LOBSTERS_URL, timeout=15, headers={"User-Agent": USER_AGENT})

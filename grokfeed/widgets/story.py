@@ -19,6 +19,7 @@ LOBSTERS_COLOR = "#ac130d"
 
 
 def source_color(source: str, subreddit_index: int) -> str:
+    """Return a hex color string for the given source."""
     if source == "HN":
         return HN_COLOR
     if source == "lobste.rs":
@@ -44,6 +45,7 @@ class StoryRow(Static):
     """
 
     highlighted: reactive[bool] = reactive(False)
+    seen: reactive[bool] = reactive(False)
 
     def __init__(
         self,
@@ -53,6 +55,7 @@ class StoryRow(Static):
         comments: int,
         url: str,
         color: str,
+        seen: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -62,10 +65,12 @@ class StoryRow(Static):
         self.num_comments = comments
         self.url = url
         self.color = color
+        self.seen = seen
 
     def render(self) -> str:
+        """Render source tag, title (dimmed if seen), and score/comment counts."""
         tag = f"[bold {self.color}][{self.source}][/]"
-        title = self.story_title
+        title = f"[dim]{self.story_title}[/]" if self.seen else self.story_title
         meta = f"[dim]▲{self.score:,}  💬{self.num_comments:,}[/]"
         return f"{tag} {title}\n{meta}"
 

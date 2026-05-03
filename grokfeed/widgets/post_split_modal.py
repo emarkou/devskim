@@ -12,6 +12,8 @@ INDENT = "  "
 
 
 class CommentWidget(Static):
+    """Renders an indented comment with author header and body."""
+
     DEFAULT_CSS = """
     CommentWidget {
         padding: 0 1;
@@ -136,6 +138,7 @@ class PostSplitModal(ModalScreen):
         self.run_worker(self._load_comments(), exclusive=True)
 
     async def _load_comments(self) -> None:
+        """Fetch comments asynchronously and mount them into the scroll pane."""
         from ..sources.comments import fetch_comments
 
         loading = self.query_one("#loading-comments", Label)
@@ -157,6 +160,7 @@ class PostSplitModal(ModalScreen):
             await scroll.mount(CommentWidget(c, self._source_color))
 
     def action_switch_pane(self) -> None:
+        """Toggle the active scroll pane between post body and comments."""
         self._active_pane = "comments" if self._active_pane == "post" else "post"
         if self._active_pane == "post":
             self.query_one("#pane-label-post", Label).update("▶ POST")
@@ -174,6 +178,7 @@ class PostSplitModal(ModalScreen):
         self.query_one(f"#{scroll_id}", ScrollableContainer).scroll_up()
 
     def action_open_url(self) -> None:
+        """Open the story URL in the system browser."""
         url = self._item.get("url")
         if url:
             self.app.open_url(url)

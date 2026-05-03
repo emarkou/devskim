@@ -25,6 +25,8 @@ cache_ttl_minutes = 10
 
 @dataclass
 class Config:
+    """Runtime settings loaded from ~/.grokfeed/config.toml."""
+
     subreddits: list[str] = field(
         default_factory=lambda: ["programming", "python", "machinelearning"]
     )
@@ -53,6 +55,7 @@ def load_config() -> tuple[Config, bool]:
 
 
 def load_cache(ttl_minutes: int) -> list[dict] | None:
+    """Return cached feed items if still within TTL, else None."""
     if not CACHE_PATH.exists():
         return None
     try:
@@ -65,6 +68,7 @@ def load_cache(ttl_minutes: int) -> list[dict] | None:
 
 
 def save_cache(items: list[dict]) -> None:
+    """Write feed items to disk with a current timestamp."""
     try:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         CACHE_PATH.write_text(json.dumps({"ts": time.time(), "items": items}))

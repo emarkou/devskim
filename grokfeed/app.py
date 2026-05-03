@@ -11,6 +11,7 @@ from textual.containers import Container
 from textual.widgets import Footer, Header, Label, LoadingIndicator
 
 from .config import Config, load_cache, save_cache
+from .seen import load_seen, mark_seen
 from .sources.hn import fetch_hn_stories_by_ids, fetch_hn_top_ids
 from .sources.lobsters import fetch_lobsters_posts
 from .sources.reddit import fetch_reddit_posts
@@ -94,6 +95,7 @@ class GrokFeedApp(App):
         self._hn_ids: list[int] = []
         self._hn_offset: int = 0
         self._reddit_after: dict[str, str] = {}
+        self._seen: set[str] = load_seen()
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -107,6 +109,7 @@ class GrokFeedApp(App):
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
     async def _load_all(self) -> None:
+        """Fetch all sources concurrently; serve from cache if still fresh."""
         loading = self.query_one("#loading")
         feed = self.query_one(FeedList)
         loading.display = True
@@ -199,6 +202,7 @@ class GrokFeedApp(App):
         feed.display = True
 
     def _apply_filter(self, from_cache: bool = False) -> None:
+        """Re-render the feed list for the active source filter."""
         feed = self.query_one(FeedList)
         if self._source_filter == ALL:
             visible = _interleave_by_score(self._all_items)
@@ -206,7 +210,7 @@ class GrokFeedApp(App):
         else:
             visible = [i for i in self._all_items if i["source"] == self._source_filter]
             label = self._source_filter
-        feed.load_items(visible)
+        feed.load_items(visible, seen_ids=self._seen)
         suffix = " (cached)" if from_cache else ""
         self._set_status(f"{len(visible)} stories — {label}{suffix}")
 
@@ -220,10 +224,18 @@ class GrokFeedApp(App):
         self.query_one(FeedList).action_cursor_up()
 
     def action_open_or_body(self) -> None:
+        """Open the split view for the highlighted story and mark it seen."""
         feed = self.query_one(FeedList)
         item = feed.current_item()
         if not item:
             return
+        post_id = item.get("post_id", "")
+        if post_id:
+            seen_key = f"{item.get('source', 'unknown')}:{post_id}"
+            self._seen.add(seen_key)
+            if not mark_seen(seen_key):
+                self._set_status("Warning: could not write to seen.json — read state not persisted")
+            feed.mark_current_seen()
         color = get_source_color(item["source"], 0)
         self.push_screen(PostSplitModal(item, color))
 
@@ -231,6 +243,7 @@ class GrokFeedApp(App):
         self.run_worker(self._fetch_more(), exclusive=True, name="fetch-more")
 
     async def _fetch_more(self) -> None:
+        """Fetch the next page of HN and Reddit items, skipping duplicates."""
         self._set_status("Loading more…")
         try:
             async with httpx.AsyncClient() as client:
@@ -294,6 +307,7 @@ class GrokFeedApp(App):
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
     def action_cycle_source(self) -> None:
+        """Step through the source filter cycle (All → HN → subreddits → lobste.rs → …)."""
         if not self._sources:
             return
         try:

@@ -12,6 +12,8 @@ INDENT = "  "
 
 
 class CommentWidget(Static):
+    """Renders an indented comment with author header and body."""
+
     DEFAULT_CSS = """
     CommentWidget {
         padding: 0 1;
@@ -36,6 +38,8 @@ class CommentWidget(Static):
 
 
 class CommentsModal(ModalScreen):
+    """Full-screen comment thread for a single post."""
+
     BINDINGS = [
         Binding("q", "dismiss", "Close"),
         Binding("escape", "dismiss", "Close", show=False),
@@ -97,6 +101,7 @@ class CommentsModal(ModalScreen):
         self.run_worker(self._load_comments(), exclusive=True)
 
     async def _load_comments(self) -> None:
+        """Fetch comments asynchronously and mount them into the scroll pane."""
         from ..sources.comments import fetch_comments
 
         loading = self.query_one("#loading-comments", Label)
