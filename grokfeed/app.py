@@ -8,6 +8,7 @@ from textual.binding import Binding
 from textual.containers import Container
 from textual.widgets import Footer, Header, Label, LoadingIndicator
 
+from .clipboard import copy_to_clipboard
 from .config import Config, load_cache, save_cache
 from .sources.hn import fetch_hn_stories_by_ids, fetch_hn_top_ids
 from .sources.lobsters import fetch_lobsters_posts
@@ -69,6 +70,7 @@ class GrokFeedApp(App):
         Binding("f", "cycle_source", "Filter"),
         Binding("r", "refresh", "Refresh"),
         Binding("m", "load_more", "More"),
+        Binding("y", "yank_url", "Copy URL"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -278,6 +280,21 @@ class GrokFeedApp(App):
 
     def action_refresh(self) -> None:
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
+
+    def action_yank_url(self) -> None:
+        """Copy the highlighted story URL to the system clipboard."""
+        item = self.query_one(FeedList).current_item()
+        if not item:
+            return
+        url = item.get("url", "")
+        if not url:
+            return
+        if copy_to_clipboard(url):
+            self._set_status(f"Copied: {url}")
+        else:
+            self._set_status(
+                "Copy failed — install xclip or xsel (Linux) to enable clipboard support"
+            )
 
     def action_cycle_source(self) -> None:
         if not self._sources:
