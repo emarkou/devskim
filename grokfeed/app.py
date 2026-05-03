@@ -113,6 +113,7 @@ class GrokFeedApp(App):
         self._reddit_after: dict[str, str] = {}
         self._seen: set[str] = load_seen()
         self._search_query: str = ""
+        self._from_cache: bool = False
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -128,6 +129,7 @@ class GrokFeedApp(App):
 
     async def _load_all(self) -> None:
         """Fetch all sources concurrently; serve from cache if still fresh."""
+        self._from_cache = False
         loading = self.query_one("#loading")
         feed = self.query_one(FeedList)
         loading.display = True
@@ -221,6 +223,7 @@ class GrokFeedApp(App):
 
     def _apply_filter(self, from_cache: bool = False) -> None:
         """Re-render the feed list for the active source filter and search query."""
+        self._from_cache = self._from_cache or from_cache
         feed = self.query_one(FeedList)
         if self._source_filter == ALL:
             visible = _interleave_by_score(self._all_items)
@@ -232,7 +235,7 @@ class GrokFeedApp(App):
             q = self._search_query.lower()
             visible = [i for i in visible if q in i["title"].lower()]
         feed.load_items(visible, seen_ids=self._seen)
-        suffix = " (cached)" if from_cache else ""
+        suffix = " (cached)" if self._from_cache else ""
         search_suffix = f" — search: {self._search_query}" if self._search_query else ""
         self._set_status(f"{len(visible)} stories — {label}{suffix}{search_suffix}")
 
