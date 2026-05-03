@@ -285,15 +285,17 @@ class GrokFeedApp(App):
         """Copy the highlighted story URL to the system clipboard."""
         item = self.query_one(FeedList).current_item()
         if not item:
+            self._set_status("Nothing to copy — no story selected")
             return
         url = item.get("url", "")
         if not url:
+            self._set_status("Nothing to copy — story has no URL")
             return
         if copy_to_clipboard(url):
             self._set_status(f"Copied: {url}")
         else:
             self._set_status(
-                "Copy failed — install xclip or xsel (Linux) to enable clipboard support"
+                "Copy failed — clipboard unavailable; ensure clipboard access or install platform clipboard tools"
             )
 
     def action_cycle_source(self) -> None:
