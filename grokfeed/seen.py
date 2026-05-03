@@ -23,6 +23,8 @@ def _load_raw() -> dict[str, float]:
         raw = json.loads(SEEN_PATH.read_bytes())
     except Exception:
         return {}
+    if not isinstance(raw, dict):
+        return {}
     result: dict[str, float] = {}
     for pid, ts in raw.items():
         v = _valid_ts(ts)
