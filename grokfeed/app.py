@@ -114,6 +114,7 @@ class GrokFeedApp(App):
         self._seen: set[str] = load_seen()
         self._search_query: str = ""
         self._from_cache: bool = False
+        self._pending_sources: set[str] = set()
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -128,8 +129,10 @@ class GrokFeedApp(App):
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
     async def _load_all(self) -> None:
-        """Fetch all sources concurrently; serve from cache if still fresh."""
+        """Fetch all sources concurrently; render each source's items as they arrive."""
         self._from_cache = False
+        self._all_items = []
+        self._pending_sources = {"HN", "Reddit", "lobste.rs"}
         loading = self.query_one("#loading")
         feed = self.query_one(FeedList)
         loading.display = True
@@ -138,6 +141,7 @@ class GrokFeedApp(App):
         # Serve from cache if fresh enough
         cached = load_cache(self.config.cache_ttl_minutes)
         if cached:
+            self._pending_sources = set()
             self._all_items = cached
             self._sources = [ALL] + list(dict.fromkeys(i["source"] for i in cached))
             self._apply_filter(from_cache=True)
@@ -145,81 +149,103 @@ class GrokFeedApp(App):
             feed.display = True
             return
 
-        self._set_status("Fetching stories…")
-        try:
-            async with httpx.AsyncClient() as client:
-                self._hn_ids = await fetch_hn_top_ids(client)
-                hn_ids = self._hn_ids[: self.config.hn_story_count]
-                self._hn_offset = len(hn_ids)
+        self._set_status(f"Fetching: {', '.join(sorted(self._pending_sources))}…")
 
-                hn_task = asyncio.create_task(fetch_hn_stories_by_ids(hn_ids, client))
-                reddit_task = asyncio.create_task(
-                    fetch_reddit_posts(
+        def _source_done(new_items: list[dict], label: str) -> None:
+            """Merge new_items, re-sort, and refresh the feed immediately."""
+            self._all_items.extend(new_items)
+            self._sources = [ALL] + list(dict.fromkeys(i["source"] for i in self._all_items))
+            self._pending_sources.discard(label)
+            loading.display = False
+            feed.display = True
+            self._apply_filter()
+
+        async with httpx.AsyncClient() as client:
+
+            async def fetch_hn() -> None:
+                try:
+                    ids = await fetch_hn_top_ids(client)
+                    self._hn_ids = ids
+                    page = ids[: self.config.hn_story_count]
+                    self._hn_offset = len(page)
+                    stories = await fetch_hn_stories_by_ids(page, client)
+                    _source_done(
+                        [
+                            {
+                                "title": s.title,
+                                "source": "HN",
+                                "score": s.score,
+                                "comments": s.comments,
+                                "url": s.url,
+                                "body": s.body,
+                                "post_id": str(s.id),
+                                "created_at": s.created_at,
+                            }
+                            for s in stories
+                        ],
+                        "HN",
+                    )
+                except Exception as e:
+                    self._pending_sources.discard("HN")
+                    self._set_status(f"HN error: {e}")
+
+            async def fetch_reddit() -> None:
+                try:
+                    posts, after = await fetch_reddit_posts(
                         self.config.subreddits, self.config.reddit_post_count, client
                     )
-                )
-                lobsters_task = asyncio.create_task(
-                    fetch_lobsters_posts(self.config.lobsters_post_count, client)
-                )
-                (
-                    hn_stories,
-                    (reddit_posts, self._reddit_after),
-                    lobsters_posts,
-                ) = await asyncio.gather(hn_task, reddit_task, lobsters_task)
-        except Exception as e:
-            self._set_status(f"Error: {e}")
+                    self._reddit_after = after
+                    _source_done(
+                        [
+                            {
+                                "title": p.title,
+                                "source": p.source,
+                                "score": p.score,
+                                "comments": p.comments,
+                                "url": p.url,
+                                "body": p.body,
+                                "post_id": p.id,
+                                "subreddit": p.subreddit,
+                                "created_at": p.created_at,
+                            }
+                            for p in posts
+                        ],
+                        "Reddit",
+                    )
+                except Exception as e:
+                    self._pending_sources.discard("Reddit")
+                    self._set_status(f"Reddit error: {e}")
+
+            async def fetch_lobsters() -> None:
+                try:
+                    lp_posts = await fetch_lobsters_posts(self.config.lobsters_post_count, client)
+                    _source_done(
+                        [
+                            {
+                                "title": lp.title,
+                                "source": lp.source,
+                                "score": lp.score,
+                                "comments": lp.comments,
+                                "url": lp.url,
+                                "body": lp.body,
+                                "post_id": lp.id,
+                                "created_at": lp.created_at,
+                            }
+                            for lp in lp_posts
+                        ],
+                        "lobste.rs",
+                    )
+                except Exception as e:
+                    self._pending_sources.discard("lobste.rs")
+                    self._set_status(f"lobste.rs error: {e}")
+
+            await asyncio.gather(fetch_hn(), fetch_reddit(), fetch_lobsters())
+
+        if self._all_items:
+            save_cache(self._all_items)
+        elif not feed.display:
             loading.display = False
-            return
-
-        items: list[dict] = []
-        for s in hn_stories:
-            items.append(
-                {
-                    "title": s.title,
-                    "source": "HN",
-                    "score": s.score,
-                    "comments": s.comments,
-                    "url": s.url,
-                    "body": s.body,
-                    "post_id": str(s.id),
-                    "created_at": s.created_at,
-                }
-            )
-        for p in reddit_posts:
-            items.append(
-                {
-                    "title": p.title,
-                    "source": p.source,
-                    "score": p.score,
-                    "comments": p.comments,
-                    "url": p.url,
-                    "body": p.body,
-                    "post_id": p.id,
-                    "subreddit": p.subreddit,
-                    "created_at": p.created_at,
-                }
-            )
-        for lp in lobsters_posts:
-            items.append(
-                {
-                    "title": lp.title,
-                    "source": lp.source,
-                    "score": lp.score,
-                    "comments": lp.comments,
-                    "url": lp.url,
-                    "body": lp.body,
-                    "post_id": lp.id,
-                    "created_at": lp.created_at,
-                }
-            )
-
-        self._all_items = items
-        self._sources = [ALL] + list(dict.fromkeys(i["source"] for i in items))
-        self._apply_filter()
-        save_cache(items)
-
-        loading.display = False
-        feed.display = True
+            self._set_status("Error: all sources failed to load")
 
     def _apply_filter(self, from_cache: bool = False) -> None:
         """Re-render the feed list for the active source filter and search query."""
@@ -237,7 +263,12 @@ class GrokFeedApp(App):
         feed.load_items(visible, seen_ids=self._seen)
         suffix = " (cached)" if self._from_cache else ""
         search_suffix = f" — search: {self._search_query}" if self._search_query else ""
-        self._set_status(f"{len(visible)} stories — {label}{suffix}{search_suffix}")
+        loading_suffix = (
+            f"  [loading: {', '.join(sorted(self._pending_sources))}]"
+            if self._pending_sources
+            else ""
+        )
+        self._set_status(f"{len(visible)} stories — {label}{suffix}{search_suffix}{loading_suffix}")
 
     def _set_status(self, msg: str) -> None:
         self.query_one("#status-bar", Label).update(msg)
