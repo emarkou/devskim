@@ -8,7 +8,7 @@ import httpx
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container
-from textual.widgets import Footer, Header, Label, LoadingIndicator
+from textual.widgets import Footer, Header, Input, Label, LoadingIndicator
 
 from .clipboard import copy_to_clipboard
 from .config import Config, load_cache, save_cache
@@ -19,6 +19,14 @@ from .sources.reddit import fetch_reddit_posts
 from .widgets.feed import FeedList
 from .widgets.post_split_modal import PostSplitModal
 from .widgets.story import source_color as get_source_color
+
+
+class _SearchInput(Input):
+    """Search bar that closes on Escape."""
+
+    def key_escape(self) -> None:
+        self.app.action_close_search()  # type: ignore[attr-defined]
+
 
 # Source filter sentinel
 ALL = "all"
@@ -69,6 +77,11 @@ class GrokFeedApp(App):
     LoadingIndicator {
         color: #ff6600;
     }
+    #search-bar {
+        dock: bottom;
+        height: 3;
+        display: none;
+    }
     """
 
     BINDINGS = [
@@ -81,6 +94,7 @@ class GrokFeedApp(App):
         Binding("r", "refresh", "Refresh"),
         Binding("m", "load_more", "More"),
         Binding("y", "yank_url", "Copy URL"),
+        Binding("/", "search", "Search"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -98,12 +112,15 @@ class GrokFeedApp(App):
         self._hn_offset: int = 0
         self._reddit_after: dict[str, str] = {}
         self._seen: set[str] = load_seen()
+        self._search_query: str = ""
+        self._from_cache: bool = False
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label("", id="status-bar")
         yield Container(LoadingIndicator(), id="loading")
         yield FeedList(id="feed")
+        yield _SearchInput(placeholder="Search titles…", id="search-bar")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -112,6 +129,7 @@ class GrokFeedApp(App):
 
     async def _load_all(self) -> None:
         """Fetch all sources concurrently; serve from cache if still fresh."""
+        self._from_cache = False
         loading = self.query_one("#loading")
         feed = self.query_one(FeedList)
         loading.display = True
@@ -204,7 +222,8 @@ class GrokFeedApp(App):
         feed.display = True
 
     def _apply_filter(self, from_cache: bool = False) -> None:
-        """Re-render the feed list for the active source filter."""
+        """Re-render the feed list for the active source filter and search query."""
+        self._from_cache = self._from_cache or from_cache
         feed = self.query_one(FeedList)
         if self._source_filter == ALL:
             visible = _interleave_by_score(self._all_items)
@@ -212,9 +231,13 @@ class GrokFeedApp(App):
         else:
             visible = [i for i in self._all_items if i["source"] == self._source_filter]
             label = self._source_filter
+        if self._search_query:
+            q = self._search_query.lower()
+            visible = [i for i in visible if q in i["title"].lower()]
         feed.load_items(visible, seen_ids=self._seen)
-        suffix = " (cached)" if from_cache else ""
-        self._set_status(f"{len(visible)} stories — {label}{suffix}")
+        suffix = " (cached)" if self._from_cache else ""
+        search_suffix = f" — search: {self._search_query}" if self._search_query else ""
+        self._set_status(f"{len(visible)} stories — {label}{suffix}{search_suffix}")
 
     def _set_status(self, msg: str) -> None:
         self.query_one("#status-bar", Label).update(msg)
@@ -324,6 +347,33 @@ class GrokFeedApp(App):
             self._set_status(
                 "Copy failed — clipboard unavailable; ensure clipboard access or install platform clipboard tools"
             )
+
+    def action_search(self) -> None:
+        """Open the search bar and focus it."""
+        bar = self.query_one("#search-bar", _SearchInput)
+        bar.display = True
+        bar.focus()
+
+    def action_close_search(self) -> None:
+        """Clear the search query, hide the bar, and restore the full feed."""
+        bar = self.query_one("#search-bar", _SearchInput)
+        bar.value = ""
+        bar.display = False
+        self._search_query = ""
+        self.query_one(FeedList).focus()
+        self._apply_filter()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Filter feed in real-time as the user types."""
+        if event.input.id == "search-bar":
+            self._search_query = event.value
+            self._apply_filter()
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """On Enter, keep filter active but return focus to the feed list."""
+        if event.input.id == "search-bar":
+            event.input.display = False
+            self.query_one(FeedList).focus()
 
     def action_cycle_source(self) -> None:
         """Step through the source filter cycle (All → HN → subreddits → lobste.rs → …)."""
