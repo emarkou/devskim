@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from rich.markup import escape
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, ScrollableContainer, Vertical
@@ -9,6 +10,7 @@ from textual.widgets import Label, Markdown, Static
 from ..sources.comments import Comment
 
 INDENT = "  "
+README_MAX_CHARS = 10_000
 
 
 class CommentWidget(Static):
@@ -31,14 +33,15 @@ class CommentWidget(Static):
         c = self._comment
         pad = INDENT * c.depth
         score = f"▲{c.score}" if c.score != 0 else ""
-        header = f"[bold {self._source_color}]{pad}{c.author}[/]  [dim]{score}[/]"
+        header = f"[bold {self._source_color}]{pad}{escape(c.author)}[/]  [dim]{score}[/]"
         body_lines = c.body.replace("\r", "").split("\n")
-        body = "\n".join(f"{pad}{line}" for line in body_lines if line.strip())
+        # escape body so Rich doesn't misparse markdown links as markup sequences
+        body = "\n".join(f"{pad}{escape(line)}" for line in body_lines if line.strip())
         return f"{header}\n{body}\n"
 
 
 class PostSplitModal(ModalScreen):
-    """Post body (left) + comments (right) in one compact view."""
+    """Post body (left) + comments or README (right) in one compact view."""
 
     BINDINGS = [
         Binding("q", "dismiss", "Close"),
@@ -91,6 +94,11 @@ class PostSplitModal(ModalScreen):
         padding: 0 1;
         border-bottom: solid $surface-darken-2;
     }
+    PostSplitModal #url-hint {
+        height: auto;
+        color: $text-muted;
+        padding: 1 0 0 0;
+    }
     PostSplitModal #modal-hint {
         height: 1;
         color: $text-muted;
@@ -104,6 +112,7 @@ class PostSplitModal(ModalScreen):
         self._item = item
         self._source_color = source_color
         self._active_pane = "post"
+        self._right_label = "README" if item.get("source") == "GitHub" else "COMMENTS"
 
     def compose(self) -> ComposeResult:
         n = self._item.get("comments", 0)
@@ -121,24 +130,34 @@ class PostSplitModal(ModalScreen):
                     with ScrollableContainer(id="post-scroll"):
                         if body:
                             yield Markdown(body)
+                            if url:
+                                yield Label(
+                                    "[dim]Press [bold]o[/] to open in browser[/]",
+                                    id="url-hint",
+                                )
                         elif url:
                             yield Label(f"{url}\n\n[dim]Press [bold]o[/] to open in browser[/]")
                         else:
                             yield Label("[dim]No content.[/]")
                 with Vertical(id="comments-panel"):
-                    yield Label("  COMMENTS", id="pane-label-comments", classes="pane-label")
+                    yield Label(
+                        f"  {self._right_label}",
+                        id="pane-label-comments",
+                        classes="pane-label",
+                    )
                     with ScrollableContainer(id="comments-scroll"):
-                        yield Label("Fetching comments…", id="loading-comments")
+                        yield Label("Fetching…", id="loading-comments")
             yield Label(
                 "q close  •  Tab switch pane  •  j/k scroll  •  o open URL",
                 id="modal-hint",
             )
 
     def on_mount(self) -> None:
+        self.focus()
         self.run_worker(self._load_comments(), exclusive=True)
 
     async def _load_comments(self) -> None:
-        """Fetch comments asynchronously and mount them into the scroll pane."""
+        """Fetch comments/README asynchronously and mount into the scroll pane."""
         from ..sources.comments import fetch_comments
 
         loading = self.query_one("#loading-comments", Label)
@@ -147,27 +166,40 @@ class PostSplitModal(ModalScreen):
         try:
             comments = await fetch_comments(self._item)
         except Exception as e:
-            loading.update(f"[red]Error: {e}[/]")
+            loading.update(f"[red]Error: {escape(str(e))}[/]")
             return
 
         await loading.remove()
 
         if not comments:
-            await scroll.mount(Label("[dim]  No comments.[/]"))
+            await scroll.mount(Label("[dim]  No content.[/]"))
+            return
+
+        # GitHub: render the single README comment as Markdown
+        if (
+            self._item.get("source") == "GitHub"
+            and len(comments) == 1
+            and comments[0].author == "README.md"
+        ):
+            readme = comments[0].body
+            if len(readme) > README_MAX_CHARS:
+                readme = readme[:README_MAX_CHARS] + "\n\n*README truncated — press o to view full*"
+            await scroll.mount(Markdown(readme))
             return
 
         for c in comments:
             await scroll.mount(CommentWidget(c, self._source_color))
 
     def action_switch_pane(self) -> None:
-        """Toggle the active scroll pane between post body and comments."""
+        """Toggle the active scroll pane between post body and right pane."""
         self._active_pane = "comments" if self._active_pane == "post" else "post"
+        rl = self._right_label
         if self._active_pane == "post":
             self.query_one("#pane-label-post", Label).update("▶ POST")
-            self.query_one("#pane-label-comments", Label).update("  COMMENTS")
+            self.query_one("#pane-label-comments", Label).update(f"  {rl}")
         else:
             self.query_one("#pane-label-post", Label).update("  POST")
-            self.query_one("#pane-label-comments", Label).update("▶ COMMENTS")
+            self.query_one("#pane-label-comments", Label).update(f"▶ {rl}")
 
     def action_scroll_down(self) -> None:
         scroll_id = "post-scroll" if self._active_pane == "post" else "comments-scroll"
