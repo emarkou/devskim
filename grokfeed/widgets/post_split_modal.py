@@ -33,7 +33,7 @@ class CommentWidget(Static):
         c = self._comment
         pad = INDENT * c.depth
         score = f"▲{c.score}" if c.score != 0 else ""
-        header = f"[bold {self._source_color}]{pad}{c.author}[/]  [dim]{score}[/]"
+        header = f"[bold {self._source_color}]{pad}{escape(c.author)}[/]  [dim]{score}[/]"
         body_lines = c.body.replace("\r", "").split("\n")
         # escape body so Rich doesn't misparse markdown links as markup sequences
         body = "\n".join(f"{pad}{escape(line)}" for line in body_lines if line.strip())
@@ -166,7 +166,7 @@ class PostSplitModal(ModalScreen):
         try:
             comments = await fetch_comments(self._item)
         except Exception as e:
-            loading.update(f"[red]Error: {e}[/]")
+            loading.update(f"[red]Error: {escape(str(e))}[/]")
             return
 
         await loading.remove()
