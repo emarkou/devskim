@@ -137,3 +137,51 @@ async def test_fetch_github_readme_with_client(httpx_mock: HTTPXMock):
     async with httpx.AsyncClient() as client:
         readme = await fetch_github_readme("owner/repo", client=client)
     assert readme == "readme content"
+
+
+@pytest.mark.asyncio
+async def test_fetch_github_trending_with_client(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(url=f"{TRENDING_URL}?since=daily", text=TRENDING_HTML)
+    async with httpx.AsyncClient() as client:
+        repos = await fetch_github_trending(count=10, client=client)
+    assert len(repos) == 2
+
+
+def test_parse_repos_missing_stars_forks_today():
+    # Article with no star/fork/today spans — should default to 0
+    html = """
+    <article class="Box-row">
+      <h2 class="h3"><a href="/owner/nometrics">owner / nometrics</a></h2>
+      <p class="col-9 color-fg-muted my-1 pr-4">No metrics here</p>
+    </article>
+    """
+    repos = _parse_repos(html, count=10)
+    assert len(repos) == 1
+    assert repos[0].stars == 0
+    assert repos[0].forks == 0
+    assert repos[0].stars_today == 0
+
+
+def test_parse_repos_no_language():
+    html = """
+    <article class="Box-row">
+      <h2 class="h3"><a href="/owner/repo">owner / repo</a></h2>
+    </article>
+    """
+    repos = _parse_repos(html, count=10)
+    assert len(repos) == 1
+    assert repos[0].language == ""
+
+
+def test_parse_repos_skips_bad_href():
+    html = """
+    <article class="Box-row">
+      <h2 class="h3"><a href="/only-one-part">bad</a></h2>
+    </article>
+    <article class="Box-row">
+      <h2 class="h3"><a href="/owner/repo">owner / repo</a></h2>
+    </article>
+    """
+    repos = _parse_repos(html, count=10)
+    assert len(repos) == 1
+    assert repos[0].owner == "owner"

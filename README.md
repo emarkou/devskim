@@ -10,6 +10,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/grokfeed)](https://pypi.org/project/grokfeed/)
 [![GitHub release](https://img.shields.io/github/v/release/emarkou/grokfeed)](https://github.com/emarkou/grokfeed/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/emarkou/grokfeed/ci.yml?branch=main&label=CI)](https://github.com/emarkou/grokfeed/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/emarkou/grokfeed/branch/main/graph/badge.svg)](https://codecov.io/gh/emarkou/grokfeed)
 
 </div>
 
