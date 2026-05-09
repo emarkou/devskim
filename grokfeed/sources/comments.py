@@ -157,4 +157,11 @@ async def fetch_comments(item: dict) -> list[Comment]:
         return await fetch_reddit_comments(item["subreddit"], item["post_id"])
     elif source == "lobste.rs":
         return await fetch_lobsters_comments(item["post_id"])
+    elif source == "GitHub":
+        from .github import fetch_github_readme
+
+        readme = await fetch_github_readme(item["post_id"])
+        if readme:
+            return [Comment(author="README.md", score=0, body=readme, depth=0)]
+        return []
     return []
