@@ -20,6 +20,8 @@ jobs:
   bump-and-tag:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,13 +52,21 @@ jobs:
           git push origin "v${{ steps.version.outputs.version }}"
 
   release:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [bump-and-tag]
+    if: |
+      always() && (
+        (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+        (github.event_name == 'workflow_dispatch' && needs.bump-and-tag.result == 'success')
+      )
     runs-on: ubuntu-latest
     environment: pypi
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', needs.bump-and-tag.outputs.version) || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # full history for release notes
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/v{0}', needs.bump-and-tag.outputs.version) || github.ref }}
 
       - uses: astral-sh/setup-uv@v5
 
@@ -68,6 +78,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           generate_release_notes: true
           files: dist/*
 
@@ -77,7 +88,7 @@ jobs:
           formula-name: grokfeed
           homebrew-tap: emarkou/homebrew-grokfeed
           base-branch: main
-          download-url: https://github.com/emarkou/grokfeed/archive/refs/tags/${{ github.ref_name }}.tar.gz
+          download-url: https://github.com/emarkou/grokfeed/archive/refs/tags/${{ env.RELEASE_TAG }}.tar.gz
           commit-message: "grokfeed {{version}}"
         env:
           COMMITTER_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
