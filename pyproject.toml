@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "grokfeed"
-version = "0.3.0"
+version = "0.4.0"
 description = "Hacker News + Reddit + lobste.rs terminal feed viewer"
 readme = "README.md"
 license = { file = "LICENSE" }
