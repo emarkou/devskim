@@ -88,6 +88,7 @@ jobs:
           formula-name: grokfeed
           homebrew-tap: emarkou/homebrew-grokfeed
           base-branch: main
+          tag-name: ${{ env.RELEASE_TAG }}
           download-url: https://github.com/emarkou/grokfeed/archive/refs/tags/${{ env.RELEASE_TAG }}.tar.gz
           commit-message: "grokfeed {{version}}"
         env:
