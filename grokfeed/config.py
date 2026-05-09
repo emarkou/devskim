@@ -19,6 +19,9 @@ subreddits = ["programming", "ClaudeAI", "machinelearning"]
 hn_story_count = 30
 reddit_post_count = 15
 lobsters_post_count = 25
+github_trending_count = 25
+# github_trending_language = "python"   # filter by language (optional)
+# github_trending_since = "daily"       # daily | weekly | monthly
 cache_ttl_minutes = 10
 """
 
@@ -33,6 +36,9 @@ class Config:
     hn_story_count: int = 30
     reddit_post_count: int = 15
     lobsters_post_count: int = 25
+    github_trending_count: int = 25
+    github_trending_language: str = ""
+    github_trending_since: str = "daily"
     cache_ttl_minutes: int = 10
 
 
@@ -50,6 +56,9 @@ def load_config() -> tuple[Config, bool]:
         hn_story_count=int(raw.get("hn_story_count", 30)),
         reddit_post_count=int(raw.get("reddit_post_count", 15)),
         lobsters_post_count=int(raw.get("lobsters_post_count", 25)),
+        github_trending_count=int(raw.get("github_trending_count", 25)),
+        github_trending_language=str(raw.get("github_trending_language", "")),
+        github_trending_since=str(raw.get("github_trending_since", "daily")),
         cache_ttl_minutes=int(raw.get("cache_ttl_minutes", 10)),
     ), created
 

@@ -16,6 +16,7 @@ SUBREDDIT_COLORS = [
 
 HN_COLOR = "#ff6600"
 LOBSTERS_COLOR = "#ac130d"
+GITHUB_COLOR = "#2ea44f"
 
 
 def source_color(source: str, subreddit_index: int) -> str:
@@ -24,6 +25,8 @@ def source_color(source: str, subreddit_index: int) -> str:
         return HN_COLOR
     if source == "lobste.rs":
         return LOBSTERS_COLOR
+    if source == "GitHub":
+        return GITHUB_COLOR
     return SUBREDDIT_COLORS[subreddit_index % len(SUBREDDIT_COLORS)]
 
 

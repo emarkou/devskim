@@ -13,6 +13,7 @@ from textual.widgets import Footer, Header, Input, Label, LoadingIndicator
 from .clipboard import copy_to_clipboard
 from .config import Config, load_cache, save_cache
 from .seen import load_seen, mark_seen
+from .sources.github import fetch_github_trending
 from .sources.hn import fetch_hn_stories_by_ids, fetch_hn_top_ids
 from .sources.lobsters import fetch_lobsters_posts
 from .sources.reddit import fetch_reddit_posts
@@ -99,7 +100,7 @@ class GrokFeedApp(App):
     ]
 
     TITLE = "grokfeed"
-    SUB_TITLE = "HN + Reddit + lobste.rs terminal reader"
+    SUB_TITLE = "HN + Reddit + lobste.rs + GitHub terminal reader"
 
     def __init__(self, config: Config) -> None:
         super().__init__()
@@ -132,7 +133,7 @@ class GrokFeedApp(App):
         """Fetch all sources concurrently; render each source's items as they arrive."""
         self._from_cache = False
         self._all_items = []
-        self._pending_sources = {"HN", "Reddit", "lobste.rs"}
+        self._pending_sources = {"HN", "Reddit", "lobste.rs", "GitHub"}
         loading = self.query_one("#loading")
         feed = self.query_one(FeedList)
         loading.display = True
@@ -239,7 +240,35 @@ class GrokFeedApp(App):
                     self._pending_sources.discard("lobste.rs")
                     self._set_status(f"lobste.rs error: {e}")
 
-            await asyncio.gather(fetch_hn(), fetch_reddit(), fetch_lobsters())
+            async def fetch_github() -> None:
+                try:
+                    repos = await fetch_github_trending(
+                        self.config.github_trending_count,
+                        self.config.github_trending_language,
+                        self.config.github_trending_since,
+                        client,
+                    )
+                    _source_done(
+                        [
+                            {
+                                "title": r.title,
+                                "source": "GitHub",
+                                "score": r.stars_today,
+                                "comments": r.forks,
+                                "url": r.url,
+                                "body": r.body,
+                                "post_id": r.id,
+                                "created_at": r.created_at,
+                            }
+                            for r in repos
+                        ],
+                        "GitHub",
+                    )
+                except Exception as e:
+                    self._pending_sources.discard("GitHub")
+                    self._set_status(f"GitHub error: {e}")
+
+            await asyncio.gather(fetch_hn(), fetch_reddit(), fetch_lobsters(), fetch_github())
 
         if self._all_items:
             save_cache(self._all_items)
