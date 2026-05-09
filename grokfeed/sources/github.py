@@ -70,7 +70,7 @@ def _parse_repos(html: str, count: int) -> list[GitHubRepo]:
         owner, name = parts
 
         # description
-        desc_m = re.search(r'<p\s[^>]*col-9[^>]*>(.*?)</p>', article, re.DOTALL)
+        desc_m = re.search(r"<p\s[^>]*col-9[^>]*>(.*?)</p>", article, re.DOTALL)
         description = ""
         if desc_m:
             description = re.sub(r"<[^>]+>", "", desc_m.group(1)).strip()
@@ -122,7 +122,9 @@ async def fetch_github_trending(
     client: httpx.AsyncClient | None = None,
 ) -> list[GitHubRepo]:
     """Scrape GitHub trending repos page."""
-    url = f"{TRENDING_URL}/{language}?since={since}" if language else f"{TRENDING_URL}?since={since}"
+    url = (
+        f"{TRENDING_URL}/{language}?since={since}" if language else f"{TRENDING_URL}?since={since}"
+    )
     headers = {"User-Agent": USER_AGENT}
 
     async def _run(c: httpx.AsyncClient) -> list[GitHubRepo]:

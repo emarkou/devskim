@@ -5,11 +5,11 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from grokfeed.sources.github import (
-    TRENDING_URL,
     README_API,
+    TRENDING_URL,
     _parse_repos,
-    fetch_github_trending,
     fetch_github_readme,
+    fetch_github_trending,
 )
 
 # Minimal trending page HTML with two repos

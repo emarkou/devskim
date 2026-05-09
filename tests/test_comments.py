@@ -1,6 +1,5 @@
 import base64
 
-import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
@@ -8,7 +7,6 @@ from grokfeed.sources.comments import (
     HN_ITEM,
     LOBSTERS_POST,
     REDDIT_COMMENTS,
-    Comment,
     _flatten_reddit,
     _strip_html,
     fetch_comments,
@@ -252,9 +250,7 @@ async def test_fetch_lobsters_comments_skips_empty_body(httpx_mock: HTTPXMock):
     httpx_mock.add_response(
         url=url,
         json={
-            "comments": [
-                {"comment": "", "commenting_user": "alice", "score": 0, "indent_level": 0}
-            ]
+            "comments": [{"comment": "", "commenting_user": "alice", "score": 0, "indent_level": 0}]
         },
     )
     comments = await fetch_lobsters_comments("emp1")
@@ -310,9 +306,7 @@ async def test_fetch_comments_dispatches_github_readme(httpx_mock: HTTPXMock):
 
 @pytest.mark.asyncio
 async def test_fetch_comments_dispatches_github_no_readme(httpx_mock: HTTPXMock):
-    httpx_mock.add_response(
-        url=README_API.format(repo="owner/empty"), status_code=404
-    )
+    httpx_mock.add_response(url=README_API.format(repo="owner/empty"), status_code=404)
     result = await fetch_comments({"source": "GitHub", "post_id": "owner/empty"})
     assert result == []
 
