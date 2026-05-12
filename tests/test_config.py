@@ -12,6 +12,12 @@ def test_resolve_config_dir_xdg_env(tmp_path):
     assert result == tmp_path / "devskim"
 
 
+def test_resolve_config_dir_xdg_relative_ignored():
+    with patch.dict(os.environ, {"XDG_CONFIG_HOME": "relative/path"}, clear=False):
+        result = _resolve_config_dir()
+    assert not str(result).startswith("relative")
+
+
 def test_resolve_config_dir_xdg_default(tmp_path):
     env = {k: v for k, v in os.environ.items() if k != "XDG_CONFIG_HOME"}
     with patch.dict(os.environ, env, clear=True):

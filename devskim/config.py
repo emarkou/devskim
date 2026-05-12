@@ -14,7 +14,7 @@ from pathlib import Path
 
 def _resolve_config_dir() -> Path:
     xdg = os.environ.get("XDG_CONFIG_HOME")
-    if xdg:
+    if xdg and Path(xdg).is_absolute():
         return Path(xdg) / "devskim"
     xdg_default = Path.home() / ".config" / "devskim"
     legacy = Path.home() / ".devskim"
