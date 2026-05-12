@@ -158,7 +158,7 @@ class _FeedApp(App):
 @pytest.mark.asyncio
 async def test_feedlist_load_items_populates_list():
     app = _FeedApp()
-    async with app.run_test() as pilot:
+    async with app.run_test() as _:
         fl = app.query_one(FeedList)
         fl.load_items([ITEM_HN, ITEM_REDDIT])
         assert len(fl._items) == 2
@@ -168,7 +168,7 @@ async def test_feedlist_load_items_populates_list():
 @pytest.mark.asyncio
 async def test_feedlist_current_item_after_load():
     app = _FeedApp()
-    async with app.run_test() as pilot:
+    async with app.run_test() as _:
         fl = app.query_one(FeedList)
         fl.load_items([ITEM_HN])
         item = fl.current_item()
@@ -179,7 +179,7 @@ async def test_feedlist_current_item_after_load():
 @pytest.mark.asyncio
 async def test_feedlist_current_url_after_load():
     app = _FeedApp()
-    async with app.run_test() as pilot:
+    async with app.run_test() as _:
         fl = app.query_one(FeedList)
         fl.load_items([ITEM_HN])
         assert fl.current_url() == "https://example.com"
