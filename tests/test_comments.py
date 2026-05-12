@@ -3,7 +3,7 @@ import base64
 import pytest
 from pytest_httpx import HTTPXMock
 
-from grokfeed.sources.comments import (
+from devskim.sources.comments import (
     HN_ITEM,
     LOBSTERS_POST,
     REDDIT_COMMENTS,
@@ -14,7 +14,7 @@ from grokfeed.sources.comments import (
     fetch_lobsters_comments,
     fetch_reddit_comments,
 )
-from grokfeed.sources.github import README_API
+from devskim.sources.github import README_API
 
 # ── _strip_html ─────────────────────────────────────────────────────────────────
 

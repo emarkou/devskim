@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import httpx
 
-USER_AGENT = "grokfeed:v0.1.0 (terminal feed reader)"
+USER_AGENT = "devskim:v0.1.0 (terminal feed reader)"
 REDDIT_HOT = "https://www.reddit.com/r/{subreddit}/hot.json?limit={limit}"
 
 

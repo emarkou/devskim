@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 
-from grokfeed.app import _interleave_by_score
+from devskim.app import _interleave_by_score
 
 # helpers
 

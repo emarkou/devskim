@@ -154,8 +154,8 @@ toml = [
 ]
 
 [[package]]
-name = "grokfeed"
-version = "0.3.0"
+name = "devskim"
+version = "0.6.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },

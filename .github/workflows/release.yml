@@ -85,11 +85,11 @@ jobs:
       - name: Update Homebrew formula
         uses: mislav/bump-homebrew-formula-action@v3
         with:
-          formula-name: grokfeed
-          homebrew-tap: emarkou/homebrew-grokfeed
+          formula-name: devskim
+          homebrew-tap: emarkou/homebrew-devskim
           base-branch: main
           tag-name: ${{ env.RELEASE_TAG }}
-          download-url: https://github.com/emarkou/grokfeed/archive/refs/tags/${{ env.RELEASE_TAG }}.tar.gz
-          commit-message: "grokfeed {{version}}"
+          download-url: https://github.com/emarkou/devskim/archive/refs/tags/${{ env.RELEASE_TAG }}.tar.gz
+          commit-message: "devskim {{version}}"
         env:
           COMMITTER_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}

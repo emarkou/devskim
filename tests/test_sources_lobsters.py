@@ -1,7 +1,7 @@
 import pytest
 from pytest_httpx import HTTPXMock
 
-from grokfeed.sources.lobsters import LOBSTERS_URL, fetch_lobsters_posts
+from devskim.sources.lobsters import LOBSTERS_URL, fetch_lobsters_posts
 
 
 def _item(

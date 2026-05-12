@@ -10,7 +10,7 @@ except ModuleNotFoundError:
 from dataclasses import dataclass, field
 from pathlib import Path
 
-CONFIG_DIR = Path.home() / ".grokfeed"
+CONFIG_DIR = Path.home() / ".devskim"
 CONFIG_PATH = CONFIG_DIR / "config.toml"
 CACHE_PATH = CONFIG_DIR / "cache.json"
 
@@ -28,7 +28,7 @@ cache_ttl_minutes = 10
 
 @dataclass
 class Config:
-    """Runtime settings loaded from ~/.grokfeed/config.toml."""
+    """Runtime settings loaded from ~/.devskim/config.toml."""
 
     subreddits: list[str] = field(
         default_factory=lambda: ["programming", "python", "machinelearning"]

@@ -56,7 +56,7 @@ def _interleave_by_score(items: list[dict]) -> list[dict]:
     return sorted(items, key=lambda i: i.get("_norm_score", 0), reverse=True)
 
 
-class GrokFeedApp(App):
+class DevSkimApp(App):
     """Hacker News + Reddit terminal feed."""
 
     CSS = """
@@ -99,7 +99,7 @@ class GrokFeedApp(App):
         Binding("q", "quit", "Quit"),
     ]
 
-    TITLE = "grokfeed"
+    TITLE = "devskim"
     SUB_TITLE = "HN + Reddit + lobste.rs + GitHub terminal reader"
 
     def __init__(self, config: Config) -> None:

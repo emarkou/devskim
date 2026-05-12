@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 import pytest
 from pytest_httpx import HTTPXMock
 
-from grokfeed.sources.reddit import REDDIT_HOT, REDDIT_HOT_AFTER, fetch_reddit_posts
+from devskim.sources.reddit import REDDIT_HOT, REDDIT_HOT_AFTER, fetch_reddit_posts
 
 
 def _child(
