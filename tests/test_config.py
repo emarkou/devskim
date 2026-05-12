@@ -3,7 +3,14 @@ import os
 import time
 from unittest.mock import patch
 
-from devskim.config import Config, _resolve_config_dir, load_cache, load_config, save_cache
+from devskim.config import (
+    Config,
+    _resolve_cache_dir,
+    _resolve_config_dir,
+    load_cache,
+    load_config,
+    save_cache,
+)
 
 
 def test_resolve_config_dir_xdg_env(tmp_path):
@@ -114,7 +121,7 @@ def test_save_and_reload_cache(tmp_path):
     items = [{"title": "test", "source": "HN"}]
     with (
         patch("devskim.config.CACHE_PATH", cache_path),
-        patch("devskim.config.CONFIG_DIR", tmp_path),
+        patch("devskim.config.CACHE_DIR", tmp_path),
     ):
         save_cache(items)
         result = load_cache(10)
@@ -126,8 +133,29 @@ def test_save_cache_writes_timestamp(tmp_path):
     before = time.time()
     with (
         patch("devskim.config.CACHE_PATH", cache_path),
-        patch("devskim.config.CONFIG_DIR", tmp_path),
+        patch("devskim.config.CACHE_DIR", tmp_path),
     ):
         save_cache([])
     data = json.loads(cache_path.read_text())
     assert abs(data["ts"] - before) < 5
+
+
+def test_resolve_cache_dir_xdg_env(tmp_path):
+    with patch.dict(os.environ, {"XDG_CACHE_HOME": str(tmp_path)}, clear=False):
+        result = _resolve_cache_dir()
+    assert result == tmp_path / "devskim"
+
+
+def test_resolve_cache_dir_xdg_relative_ignored():
+    with patch.dict(os.environ, {"XDG_CACHE_HOME": "relative/cache"}, clear=False):
+        result = _resolve_cache_dir()
+    assert not str(result).startswith("relative")
+
+
+def test_resolve_cache_dir_default(tmp_path):
+    env = {k: v for k, v in os.environ.items() if k != "XDG_CACHE_HOME"}
+    with patch.dict(os.environ, env, clear=True):
+        with patch("devskim.config.Path") as mock_path:
+            mock_path.home.return_value = tmp_path
+            result = _resolve_cache_dir()
+    assert result == tmp_path / ".cache" / "devskim"

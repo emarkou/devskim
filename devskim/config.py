@@ -24,9 +24,17 @@ def _resolve_config_dir() -> Path:
     return xdg_default
 
 
+def _resolve_cache_dir() -> Path:
+    xdg = os.environ.get("XDG_CACHE_HOME")
+    if xdg and Path(xdg).is_absolute():
+        return Path(xdg) / "devskim"
+    return Path.home() / ".cache" / "devskim"
+
+
 CONFIG_DIR = _resolve_config_dir()
 CONFIG_PATH = CONFIG_DIR / "config.toml"
-CACHE_PATH = CONFIG_DIR / "cache.json"
+CACHE_DIR = _resolve_cache_dir()
+CACHE_PATH = CACHE_DIR / "cache.json"
 
 DEFAULT_CONFIG = """\
 subreddits = ["programming", "ClaudeAI", "machinelearning"]
@@ -93,7 +101,7 @@ def load_cache(ttl_minutes: int) -> list[dict] | None:
 def save_cache(items: list[dict]) -> None:
     """Write feed items to disk with a current timestamp."""
     try:
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
         CACHE_PATH.write_text(json.dumps({"ts": time.time(), "items": items}))
     except Exception:
         pass
