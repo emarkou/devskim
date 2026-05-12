@@ -32,9 +32,9 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: uv sync
       - run: uv run pytest --cov=devskim --cov-report=xml --cov-report=term-missing
-      - name: Upload coverage
+      - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
