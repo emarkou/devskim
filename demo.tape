@@ -9,7 +9,7 @@ Set Margin 0
 Set Theme "Dracula"
 Set Framerate 20
 
-Type "grokfeed"
+Type "devskim"
 Enter
 Sleep 10s
 

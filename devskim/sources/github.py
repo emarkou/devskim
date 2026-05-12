@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 import httpx
 
-USER_AGENT = "grokfeed:v0.1.0 (terminal feed reader)"
+USER_AGENT = "devskim:v0.1.0 (terminal feed reader)"
 TRENDING_URL = "https://github.com/trending"
 README_API = "https://api.github.com/repos/{repo}/readme"
 

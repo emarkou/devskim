@@ -3,8 +3,8 @@ import time
 
 import pytest
 
-import grokfeed.seen as seen_module
-from grokfeed.seen import _load_raw, _valid_ts, load_seen, mark_seen
+import devskim.seen as seen_module
+from devskim.seen import _load_raw, _valid_ts, load_seen, mark_seen
 
 # ── _valid_ts ──────────────────────────────────────────────────────────────────
 

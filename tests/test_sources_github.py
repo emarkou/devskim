@@ -4,7 +4,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from grokfeed.sources.github import (
+from devskim.sources.github import (
     README_API,
     TRENDING_URL,
     _parse_repos,

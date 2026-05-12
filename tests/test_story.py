@@ -1,4 +1,4 @@
-from grokfeed.widgets.story import (
+from devskim.widgets.story import (
     GITHUB_COLOR,
     HN_COLOR,
     LOBSTERS_COLOR,

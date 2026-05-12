@@ -15,7 +15,7 @@ def _strip_html(raw: str) -> str:
 
 
 LOBSTERS_URL = "https://lobste.rs/hottest.json"
-USER_AGENT = "grokfeed:v0.1.0 (terminal feed reader)"
+USER_AGENT = "devskim:v0.1.0 (terminal feed reader)"
 
 
 @dataclass

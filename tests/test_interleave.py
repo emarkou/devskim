@@ -1,6 +1,6 @@
 import time
 
-from grokfeed.app import _interleave_by_score
+from devskim.app import _interleave_by_score
 
 
 def _item(source: str, score: int, created_at: int = 0) -> dict:

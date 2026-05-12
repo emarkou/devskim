@@ -1,16 +1,16 @@
 <div align="center">
 
-<img src="docs/img/grokfeed.png" alt="grokfeed" width="500"/>
+<img src="docs/img/devskim.png" alt="devskim" width="500"/>
 
 
 **Terminal feed reader for Hacker News, Reddit, lobste.rs, and GitHub Trending.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyPI version](https://img.shields.io/pypi/v/grokfeed)](https://pypi.org/project/grokfeed/)
-[![Python versions](https://img.shields.io/pypi/pyversions/grokfeed)](https://pypi.org/project/grokfeed/)
-[![GitHub release](https://img.shields.io/github/v/release/emarkou/grokfeed)](https://github.com/emarkou/grokfeed/releases/latest)
-[![CI](https://img.shields.io/github/actions/workflow/status/emarkou/grokfeed/ci.yml?branch=main&label=CI)](https://github.com/emarkou/grokfeed/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/emarkou/grokfeed/branch/main/graph/badge.svg)](https://codecov.io/gh/emarkou/grokfeed)
+[![PyPI version](https://img.shields.io/pypi/v/devskim)](https://pypi.org/project/devskim/)
+[![Python versions](https://img.shields.io/pypi/pyversions/devskim)](https://pypi.org/project/devskim/)
+[![GitHub release](https://img.shields.io/github/v/release/emarkou/devskim)](https://github.com/emarkou/devskim/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/emarkou/devskim/ci.yml?branch=main&label=CI)](https://github.com/emarkou/devskim/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/emarkou/devskim/branch/main/graph/badge.svg)](https://codecov.io/gh/emarkou/devskim)
 
 </div>
 
@@ -22,27 +22,27 @@
 - Split view with post body / repo stats and threaded comments or README side by side
 - Filter feed by source, refresh on demand, paginate with `m`
 - Keyword search with `/`, copy URL with `y`, mark seen posts dimmed automatically
-- Config file at `~/.grokfeed/config.toml` — created automatically on first run
+- Config file at `~/.devskim/config.toml` — created automatically on first run
 
 ## Install
 
 ### Homebrew (macOS/Linux)
 
 ```bash
-brew tap emarkou/grokfeed
-brew install grokfeed
+brew tap emarkou/devskim
+brew install devskim
 ```
 
 ### pip
 
 ```bash
-pip install grokfeed
+pip install devskim
 ```
 
 ### pipx (isolated install)
 
 ```bash
-pipx install grokfeed
+pipx install devskim
 ```
 
 ### From source
@@ -50,17 +50,17 @@ pipx install grokfeed
 Requires Python 3.11+.
 
 ```bash
-git clone https://github.com/emarkou/grokfeed.git
-cd grokfeed
+git clone https://github.com/emarkou/devskim.git
+cd devskim
 pip install -e .
 ```
 
 ---
 
-On first run, a config file is created at `~/.grokfeed/config.toml`. Edit it to change subreddits:
+On first run, a config file is created at `~/.devskim/config.toml`. Edit it to change subreddits:
 
 ```bash
-nano ~/.grokfeed/config.toml
+nano ~/.devskim/config.toml
 ```
 
 ```toml
@@ -74,7 +74,7 @@ github_trending_count = 25
 cache_ttl_minutes = 10
 ```
 
-Run `grokfeed` — changes take effect on next launch or press `r` to refresh.
+Run `devskim` — changes take effect on next launch or press `r` to refresh.
 
 ## Demo
 
@@ -108,7 +108,7 @@ Run `grokfeed` — changes take effect on next launch or press `r` to refresh.
 
 ## Config
 
-`~/.grokfeed/config.toml` — created on first run with defaults.
+`~/.devskim/config.toml` — created on first run with defaults.
 
 | Key | Default | Description |
 |-----|---------|-------------|

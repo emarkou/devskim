@@ -2,7 +2,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from grokfeed.sources.hn import HN_BASE, _strip_html, fetch_hn_stories_by_ids, fetch_hn_top_ids
+from devskim.sources.hn import HN_BASE, _strip_html, fetch_hn_stories_by_ids, fetch_hn_top_ids
 
 
 def test_strip_html_paragraph_tag():

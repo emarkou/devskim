@@ -1,18 +1,18 @@
 from subprocess import CalledProcessError
 from unittest.mock import patch
 
-from grokfeed.clipboard import copy_to_clipboard
+from devskim.clipboard import copy_to_clipboard
 
 
 def test_copy_returns_true_on_success():
-    with patch("grokfeed.clipboard.subprocess.run") as mock_run:
+    with patch("devskim.clipboard.subprocess.run") as mock_run:
         mock_run.return_value = None
         assert copy_to_clipboard("https://example.com") is True
         assert mock_run.called
 
 
 def test_copy_passes_encoded_input():
-    with patch("grokfeed.clipboard.subprocess.run") as mock_run:
+    with patch("devskim.clipboard.subprocess.run") as mock_run:
         mock_run.return_value = None
         copy_to_clipboard("https://example.com")
         _, kwargs = mock_run.call_args
@@ -20,13 +20,13 @@ def test_copy_passes_encoded_input():
 
 
 def test_copy_returns_false_on_file_not_found():
-    with patch("grokfeed.clipboard.subprocess.run", side_effect=FileNotFoundError):
+    with patch("devskim.clipboard.subprocess.run", side_effect=FileNotFoundError):
         assert copy_to_clipboard("https://example.com") is False
 
 
 def test_copy_returns_false_on_subprocess_error():
     with patch(
-        "grokfeed.clipboard.subprocess.run",
+        "devskim.clipboard.subprocess.run",
         side_effect=CalledProcessError(1, "pbcopy"),
     ):
         assert copy_to_clipboard("https://example.com") is False
@@ -41,8 +41,8 @@ def test_copy_linux_falls_back_to_xsel():
             raise FileNotFoundError
 
     with (
-        patch("grokfeed.clipboard.sys.platform", "linux"),
-        patch("grokfeed.clipboard.subprocess.run", side_effect=fake_run),
+        patch("devskim.clipboard.sys.platform", "linux"),
+        patch("devskim.clipboard.subprocess.run", side_effect=fake_run),
     ):
         result = copy_to_clipboard("https://example.com")
 

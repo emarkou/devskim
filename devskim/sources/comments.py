@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import httpx
 
-USER_AGENT = "grokfeed:v0.1.0 (terminal feed reader)"
+USER_AGENT = "devskim:v0.1.0 (terminal feed reader)"
 HN_ITEM = "https://hacker-news.firebaseio.com/v0/item/{}.json"
 REDDIT_COMMENTS = "https://www.reddit.com/r/{subreddit}/comments/{post_id}.json?limit=50&depth=3"
 LOBSTERS_POST = "https://lobste.rs/s/{short_id}.json"

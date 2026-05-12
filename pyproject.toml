@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "grokfeed"
+name = "devskim"
 version = "0.6.0"
 description = "Hacker News + Reddit + lobste.rs terminal feed viewer"
 readme = "README.md"
@@ -30,15 +30,15 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/emarkou/grokfeed"
-Repository = "https://github.com/emarkou/grokfeed"
-Issues = "https://github.com/emarkou/grokfeed/issues"
+Homepage = "https://github.com/emarkou/devskim"
+Repository = "https://github.com/emarkou/devskim"
+Issues = "https://github.com/emarkou/devskim/issues"
 
 [project.scripts]
-grokfeed = "grokfeed.main:app"
+devskim = "devskim.main:app"
 
 [tool.hatch.build.targets.wheel]
-packages = ["grokfeed"]
+packages = ["devskim"]
 
 [dependency-groups]
 dev = [
@@ -68,7 +68,7 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.coverage.run]
-source = ["grokfeed"]
+source = ["devskim"]
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]

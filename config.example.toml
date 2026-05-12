@@ -1,5 +1,5 @@
-# grokfeed configuration
-# Copy to ~/.grokfeed/config.toml and edit to taste.
+# devskim configuration
+# Copy to ~/.devskim/config.toml and edit to taste.
 
 # Subreddits to include in the feed (without the r/ prefix).
 subreddits = ["programming", "python", "machinelearning", "rust", "devops"]
