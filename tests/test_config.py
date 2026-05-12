@@ -1,8 +1,47 @@
 import json
+import os
 import time
 from unittest.mock import patch
 
-from devskim.config import Config, load_cache, load_config, save_cache
+from devskim.config import Config, _resolve_config_dir, load_cache, load_config, save_cache
+
+
+def test_resolve_config_dir_xdg_env(tmp_path):
+    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(tmp_path)}, clear=False):
+        result = _resolve_config_dir()
+    assert result == tmp_path / "devskim"
+
+
+def test_resolve_config_dir_xdg_default(tmp_path):
+    env = {k: v for k, v in os.environ.items() if k != "XDG_CONFIG_HOME"}
+    with patch.dict(os.environ, env, clear=True):
+        with patch("devskim.config.Path") as mock_path:
+            mock_home = tmp_path
+            mock_path.home.return_value = mock_home
+            result = _resolve_config_dir()
+    assert result == mock_home / ".config" / "devskim"
+
+
+def test_resolve_config_dir_legacy_fallback(tmp_path):
+    legacy = tmp_path / ".devskim"
+    legacy.mkdir()
+    env = {k: v for k, v in os.environ.items() if k != "XDG_CONFIG_HOME"}
+    with patch.dict(os.environ, env, clear=True):
+        with patch("devskim.config.Path") as mock_path:
+            mock_path.home.return_value = tmp_path
+            result = _resolve_config_dir()
+    assert result == legacy
+
+
+def test_resolve_config_dir_xdg_takes_priority_over_legacy(tmp_path):
+    legacy = tmp_path / ".devskim"
+    legacy.mkdir()
+    xdg_dir = tmp_path / "xdg"
+    xdg_dir.mkdir()
+    (xdg_dir / "devskim").mkdir()
+    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_dir)}, clear=False):
+        result = _resolve_config_dir()
+    assert result == xdg_dir / "devskim"
 
 
 def test_config_defaults():

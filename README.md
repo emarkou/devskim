@@ -57,10 +57,10 @@ pip install -e .
 
 ---
 
-On first run, a config file is created at `~/.devskim/config.toml`. Edit it to change subreddits:
+On first run, a config file is created at `$XDG_CONFIG_HOME/devskim/config.toml` (defaults to `~/.config/devskim/config.toml`). Edit it to change subreddits:
 
 ```bash
-nano ~/.devskim/config.toml
+nano ~/.config/devskim/config.toml
 ```
 
 ```toml
@@ -108,7 +108,7 @@ Run `devskim` — changes take effect on next launch or press `r` to refresh.
 
 ## Config
 
-`~/.devskim/config.toml` — created on first run with defaults.
+`$XDG_CONFIG_HOME/devskim/config.toml` (default: `~/.config/devskim/config.toml`) — created on first run with defaults. If `~/.devskim` exists and the XDG path does not, the legacy location is used automatically.
 
 | Key | Default | Description |
 |-----|---------|-------------|
