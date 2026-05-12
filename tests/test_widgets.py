@@ -124,6 +124,7 @@ def test_feedlist_color_map_stable_across_calls():
 
 def test_feedlist_color_for_hn():
     from devskim.widgets.story import HN_COLOR
+
     fl = FeedList()
     assert fl._color_for("HN") == HN_COLOR
 
