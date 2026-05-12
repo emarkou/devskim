@@ -76,6 +76,22 @@ def test_save_and_reload_cache(tmp_path):
     assert result == items
 
 
+def test_load_cache_returns_none_on_corrupt_json(tmp_path):
+    cache_path = tmp_path / "cache.json"
+    cache_path.write_text("not valid json {{{")
+    with patch("devskim.config.CACHE_PATH", cache_path):
+        assert load_cache(10) is None
+
+
+def test_save_cache_silently_ignores_write_error(tmp_path):
+    cache_path = tmp_path / "nonexistent_dir" / "cache.json"
+    with (
+        patch("devskim.config.CACHE_PATH", cache_path),
+        patch("devskim.config.CONFIG_DIR", tmp_path / "nonexistent_dir"),
+    ):
+        save_cache([{"title": "x"}])
+
+
 def test_save_cache_writes_timestamp(tmp_path):
     cache_path = tmp_path / "cache.json"
     before = time.time()
