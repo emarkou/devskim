@@ -2,7 +2,13 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from devskim.sources.hn import HN_BASE, _strip_html, fetch_hn_stories_by_ids, fetch_hn_top_ids
+from devskim.sources.hn import (
+    HN_BASE,
+    _strip_html,
+    fetch_hn_stories,
+    fetch_hn_stories_by_ids,
+    fetch_hn_top_ids,
+)
 
 
 def test_strip_html_paragraph_tag():
@@ -114,3 +120,75 @@ async def test_fetch_hn_stories_multiple_ids_filtered(httpx_mock: HTTPXMock):
         stories = await fetch_hn_stories_by_ids([10, 11], client)
     assert len(stories) == 1
     assert stories[0].id == 10
+
+
+@pytest.mark.asyncio
+async def test_fetch_hn_stories_by_ids_no_client(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url=f"{HN_BASE}/item/5.json",
+        json={
+            "id": 5,
+            "type": "story",
+            "title": "No Client Story",
+            "url": "https://noclient.com",
+            "score": 10,
+            "descendants": 1,
+        },
+    )
+    stories = await fetch_hn_stories_by_ids([5])
+    assert len(stories) == 1
+    assert stories[0].title == "No Client Story"
+
+
+@pytest.mark.asyncio
+async def test_fetch_hn_stories_convenience(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url=f"{HN_BASE}/topstories.json",
+        json=[20, 21],
+    )
+    httpx_mock.add_response(
+        url=f"{HN_BASE}/item/20.json",
+        json={
+            "id": 20,
+            "type": "story",
+            "title": "Story A",
+            "url": "https://a.com",
+            "score": 5,
+            "descendants": 0,
+        },
+    )
+    httpx_mock.add_response(
+        url=f"{HN_BASE}/item/21.json",
+        json={
+            "id": 21,
+            "type": "story",
+            "title": "Story B",
+            "url": "https://b.com",
+            "score": 3,
+            "descendants": 0,
+        },
+    )
+    stories = await fetch_hn_stories(count=2)
+    assert len(stories) == 2
+    titles = {s.title for s in stories}
+    assert "Story A" in titles
+    assert "Story B" in titles
+
+
+@pytest.mark.asyncio
+async def test_fetch_hn_stories_with_client(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(url=f"{HN_BASE}/topstories.json", json=[30])
+    httpx_mock.add_response(
+        url=f"{HN_BASE}/item/30.json",
+        json={
+            "id": 30,
+            "type": "story",
+            "title": "With Client",
+            "url": "https://wc.com",
+            "score": 1,
+            "descendants": 0,
+        },
+    )
+    async with httpx.AsyncClient() as client:
+        stories = await fetch_hn_stories(count=1, client=client)
+    assert stories[0].title == "With Client"
