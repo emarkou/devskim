@@ -84,10 +84,13 @@ def test_load_cache_returns_none_on_corrupt_json(tmp_path):
 
 
 def test_save_cache_silently_ignores_write_error(tmp_path):
-    cache_path = tmp_path / "nonexistent_dir" / "cache.json"
+    # Create a *file* where save_cache expects a directory — mkdir will fail.
+    blocker = tmp_path / "not_a_dir"
+    blocker.write_text("block")
+    cache_path = blocker / "cache.json"
     with (
         patch("devskim.config.CACHE_PATH", cache_path),
-        patch("devskim.config.CONFIG_DIR", tmp_path / "nonexistent_dir"),
+        patch("devskim.config.CONFIG_DIR", blocker),
     ):
         save_cache([{"title": "x"}])
 
