@@ -7,6 +7,7 @@ from devskim.config import (
     Config,
     _resolve_cache_dir,
     _resolve_config_dir,
+    _resolve_data_dir,
     load_cache,
     load_config,
     save_cache,
@@ -159,3 +160,24 @@ def test_resolve_cache_dir_default(tmp_path):
             mock_path.home.return_value = tmp_path
             result = _resolve_cache_dir()
     assert result == tmp_path / ".cache" / "devskim"
+
+
+def test_resolve_data_dir_xdg_env(tmp_path):
+    with patch.dict(os.environ, {"XDG_DATA_HOME": str(tmp_path)}, clear=False):
+        result = _resolve_data_dir()
+    assert result == tmp_path / "devskim"
+
+
+def test_resolve_data_dir_xdg_relative_ignored():
+    with patch.dict(os.environ, {"XDG_DATA_HOME": "relative/data"}, clear=False):
+        result = _resolve_data_dir()
+    assert not str(result).startswith("relative")
+
+
+def test_resolve_data_dir_default(tmp_path):
+    env = {k: v for k, v in os.environ.items() if k != "XDG_DATA_HOME"}
+    with patch.dict(os.environ, env, clear=True):
+        with patch("devskim.config.Path") as mock_path:
+            mock_path.home.return_value = tmp_path
+            result = _resolve_data_dir()
+    assert result == tmp_path / ".local" / "share" / "devskim"

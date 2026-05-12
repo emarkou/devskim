@@ -31,10 +31,18 @@ def _resolve_cache_dir() -> Path:
     return Path.home() / ".cache" / "devskim"
 
 
+def _resolve_data_dir() -> Path:
+    xdg = os.environ.get("XDG_DATA_HOME")
+    if xdg and Path(xdg).is_absolute():
+        return Path(xdg) / "devskim"
+    return Path.home() / ".local" / "share" / "devskim"
+
+
 CONFIG_DIR = _resolve_config_dir()
 CONFIG_PATH = CONFIG_DIR / "config.toml"
 CACHE_DIR = _resolve_cache_dir()
 CACHE_PATH = CACHE_DIR / "cache.json"
+DATA_DIR = _resolve_data_dir()
 
 DEFAULT_CONFIG = """\
 subreddits = ["programming", "ClaudeAI", "machinelearning"]

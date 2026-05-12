@@ -3,9 +3,9 @@ from __future__ import annotations
 import json
 import time
 
-from .config import CONFIG_DIR
+from .config import DATA_DIR
 
-SEEN_PATH = CONFIG_DIR / "seen.json"
+SEEN_PATH = DATA_DIR / "seen.json"
 SEEN_TTL_SECONDS = 86_400  # 1 day
 
 
@@ -44,7 +44,7 @@ def load_seen() -> set[str]:
 def mark_seen(post_id: str) -> bool:
     """Record post_id as seen, pruning entries older than the TTL. Returns False on write failure."""
     try:
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
         cutoff = time.time() - SEEN_TTL_SECONDS
         data = {pid: ts for pid, ts in _load_raw().items() if ts >= cutoff}
         data[post_id] = time.time()

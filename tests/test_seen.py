@@ -114,7 +114,7 @@ def test_load_seen_empty_file(monkeypatch, tmp_path):
 def test_mark_seen_creates_file(monkeypatch, tmp_path):
     seen_path = tmp_path / "seen.json"
     monkeypatch.setattr(seen_module, "SEEN_PATH", seen_path)
-    monkeypatch.setattr(seen_module, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(seen_module, "DATA_DIR", tmp_path)
     assert mark_seen("HN:42") is True
     assert seen_path.exists()
 
@@ -122,7 +122,7 @@ def test_mark_seen_creates_file(monkeypatch, tmp_path):
 def test_mark_seen_persists_id(monkeypatch, tmp_path):
     seen_path = tmp_path / "seen.json"
     monkeypatch.setattr(seen_module, "SEEN_PATH", seen_path)
-    monkeypatch.setattr(seen_module, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(seen_module, "DATA_DIR", tmp_path)
     mark_seen("HN:99")
     data = json.loads(seen_path.read_text())
     assert "HN:99" in data
@@ -133,7 +133,7 @@ def test_mark_seen_prunes_expired(monkeypatch, tmp_path):
     old_ts = time.time() - 90_000
     seen_path.write_text(json.dumps({"HN:old": old_ts}))
     monkeypatch.setattr(seen_module, "SEEN_PATH", seen_path)
-    monkeypatch.setattr(seen_module, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(seen_module, "DATA_DIR", tmp_path)
     mark_seen("HN:new")
     data = json.loads(seen_path.read_text())
     assert "HN:old" not in data
@@ -145,7 +145,7 @@ def test_mark_seen_overwrites_existing_id(monkeypatch, tmp_path):
     old_ts = time.time() - 100
     seen_path.write_text(json.dumps({"HN:1": old_ts}))
     monkeypatch.setattr(seen_module, "SEEN_PATH", seen_path)
-    monkeypatch.setattr(seen_module, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(seen_module, "DATA_DIR", tmp_path)
     mark_seen("HN:1")
     data = json.loads(seen_path.read_text())
     assert data["HN:1"] > old_ts
@@ -154,5 +154,5 @@ def test_mark_seen_overwrites_existing_id(monkeypatch, tmp_path):
 def test_mark_seen_returns_false_on_write_failure(monkeypatch, tmp_path):
     # SEEN_PATH points to an existing directory — write_text will fail
     monkeypatch.setattr(seen_module, "SEEN_PATH", tmp_path)
-    monkeypatch.setattr(seen_module, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(seen_module, "DATA_DIR", tmp_path)
     assert mark_seen("HN:42") is False
