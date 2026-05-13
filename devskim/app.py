@@ -141,11 +141,11 @@ class DevSkimApp(App):
 
     def __init__(self, config: Config) -> None:
         super().__init__()
-        if config.theme == "auto":
-            self.dark = _terminal_is_dark()
-        else:
-            self.dark = config.theme != "light"
         self.config = config
+        if config.theme == "auto":
+            self._initial_dark = _terminal_is_dark()
+        else:
+            self._initial_dark = config.theme != "light"
         self._all_items: list[dict] = []
         self._source_filter: str = ALL
         self._sources: list[str] = []
@@ -167,6 +167,7 @@ class DevSkimApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.dark = self._initial_dark
         self.query_one("#feed").display = False
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
