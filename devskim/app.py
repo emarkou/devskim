@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import math
+import os
+import select
+import sys
+import termios
 import time as _time
+import tty
 
 import httpx
 from textual.app import App, ComposeResult
@@ -20,6 +25,39 @@ from .sources.reddit import fetch_reddit_posts
 from .widgets.feed import FeedList
 from .widgets.post_split_modal import PostSplitModal
 from .widgets.story import source_color as get_source_color
+
+
+def _terminal_is_dark() -> bool:
+    """Query terminal background via OSC 11. Returns True if dark (or unknown)."""
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        return True
+    try:
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            os.write(sys.stdout.fileno(), b"\033]11;?\033\\")
+            ready, _, _ = select.select([sys.stdin], [], [], 0.2)
+            if not ready:
+                return True
+            buf = b""
+            while True:
+                r, _, _ = select.select([sys.stdin], [], [], 0.05)
+                if not r:
+                    break
+                buf += os.read(fd, 64)
+                if buf.endswith(b"\\") or b"\x07" in buf:
+                    break
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        text = buf.decode("latin-1")
+        if "rgb:" in text:
+            parts = text.split("rgb:")[1].rstrip("\\\x07\x1b").split("/")
+            rv, gv, bv = int(parts[0][:2], 16), int(parts[1][:2], 16), int(parts[2][:2], 16)
+            return (0.299 * rv + 0.587 * gv + 0.114 * bv) < 128
+    except Exception:
+        pass
+    return True
 
 
 class _SearchInput(Input):
@@ -103,7 +141,10 @@ class DevSkimApp(App):
 
     def __init__(self, config: Config) -> None:
         super().__init__()
-        self.dark = config.theme != "light"
+        if config.theme == "auto":
+            self.dark = _terminal_is_dark()
+        else:
+            self.dark = config.theme != "light"
         self.config = config
         self._all_items: list[dict] = []
         self._source_filter: str = ALL

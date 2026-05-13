@@ -53,7 +53,7 @@ github_trending_count = 25
 # github_trending_language = "python"   # filter by language (optional)
 # github_trending_since = "daily"       # daily | weekly | monthly
 cache_ttl_minutes = 10
-# theme = "light"                       # "dark" (default) or "light"
+# theme = "auto"                        # auto (default), dark, or light
 """
 
 
@@ -71,7 +71,7 @@ class Config:
     github_trending_language: str = ""
     github_trending_since: str = "daily"
     cache_ttl_minutes: int = 10
-    theme: str = "dark"
+    theme: str = "auto"
 
 
 def load_config() -> tuple[Config, bool]:
@@ -92,7 +92,7 @@ def load_config() -> tuple[Config, bool]:
         github_trending_language=str(raw.get("github_trending_language", "")),
         github_trending_since=str(raw.get("github_trending_since", "daily")),
         cache_ttl_minutes=int(raw.get("cache_ttl_minutes", 10)),
-        theme=str(raw.get("theme", "dark")),
+        theme=str(raw.get("theme", "auto")),
     ), created
 
 
