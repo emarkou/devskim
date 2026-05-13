@@ -23,7 +23,7 @@ def test_resolve_config_dir_xdg_env(tmp_path):
 def test_resolve_config_dir_xdg_relative_ignored():
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": "relative/path"}, clear=False):
         result = _resolve_config_dir()
-    assert not str(result).startswith("relative")
+    assert result.is_absolute()
 
 
 def test_resolve_config_dir_xdg_default(tmp_path):
@@ -150,7 +150,7 @@ def test_resolve_cache_dir_xdg_env(tmp_path):
 def test_resolve_cache_dir_xdg_relative_ignored():
     with patch.dict(os.environ, {"XDG_CACHE_HOME": "relative/cache"}, clear=False):
         result = _resolve_cache_dir()
-    assert not str(result).startswith("relative")
+    assert result.is_absolute()
 
 
 def test_resolve_cache_dir_default(tmp_path):
@@ -171,7 +171,7 @@ def test_resolve_data_dir_xdg_env(tmp_path):
 def test_resolve_data_dir_xdg_relative_ignored():
     with patch.dict(os.environ, {"XDG_DATA_HOME": "relative/data"}, clear=False):
         result = _resolve_data_dir()
-    assert not str(result).startswith("relative")
+    assert result.is_absolute()
 
 
 def test_resolve_data_dir_default(tmp_path):

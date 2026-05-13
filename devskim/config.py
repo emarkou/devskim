@@ -19,7 +19,7 @@ def _resolve_config_dir() -> Path:
     xdg_default = Path.home() / ".config" / "devskim"
     legacy = Path.home() / ".devskim"
     # Keep existing installs working if they have ~/.devskim and no XDG dir yet.
-    if legacy.exists() and not xdg_default.exists():
+    if legacy.is_dir() and not xdg_default.exists():
         return legacy
     return xdg_default
 
