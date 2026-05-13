@@ -93,7 +93,7 @@ class PostSplitModal(ModalScreen):
         padding: 0 1;
         border-bottom: solid $surface-darken-2;
     }
-    PostSplitModal .pane-label--active {
+    PostSplitModal .pane-label.pane-label--active {
         color: $accent;
         text-style: bold;
     }
