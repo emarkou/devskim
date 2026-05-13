@@ -94,7 +94,8 @@ class PostSplitModal(ModalScreen):
         border-bottom: solid $surface-darken-2;
     }
     PostSplitModal .pane-label.pane-label--active {
-        color: $accent;
+        color: $background;
+        background: $accent;
         text-style: bold;
     }
     PostSplitModal #url-hint {
