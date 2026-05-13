@@ -146,6 +146,8 @@ class DevSkimApp(App):
             self._initial_dark = _terminal_is_dark()
         else:
             self._initial_dark = config.theme != "light"
+        # theme can only be set after mount; stash name for on_mount
+        self._textual_theme = "textual-dark" if self._initial_dark else "textual-light"
         self._all_items: list[dict] = []
         self._source_filter: str = ALL
         self._sources: list[str] = []
@@ -167,7 +169,7 @@ class DevSkimApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.dark = self._initial_dark
+        self.theme = self._textual_theme
         self.query_one("#feed").display = False
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
