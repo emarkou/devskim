@@ -5,9 +5,7 @@ import math
 import os
 import select
 import sys
-import termios
 import time as _time
-import tty
 
 import httpx
 from textual.app import App, ComposeResult
@@ -28,28 +26,41 @@ from .widgets.story import source_color as get_source_color
 
 
 def _terminal_is_dark() -> bool:
-    """Query terminal background via OSC 11. Returns True if dark (or unknown)."""
-    if not sys.stdin.isatty() or not sys.stdout.isatty():
+    """Query terminal background via OSC 11. Returns True if dark (or unknown).
+
+    Opens the controlling TTY directly via os.ctermid() to avoid touching
+    Textual's stdin. POSIX-only; returns True immediately on other platforms.
+    """
+    if sys.platform == "win32":
         return True
     try:
-        fd = sys.stdin.fileno()
-        old = termios.tcgetattr(fd)
+        import termios
+        import tty
+    except ImportError:
+        return True
+    try:
+        tty_path = os.ctermid()
+        fd = os.open(tty_path, os.O_RDWR | os.O_NOCTTY)
         try:
-            tty.setraw(fd)
-            os.write(sys.stdout.fileno(), b"\033]11;?\033\\")
-            ready, _, _ = select.select([sys.stdin], [], [], 0.2)
-            if not ready:
-                return True
-            buf = b""
-            while True:
-                r, _, _ = select.select([sys.stdin], [], [], 0.05)
-                if not r:
-                    break
-                buf += os.read(fd, 64)
-                if buf.endswith(b"\\") or b"\x07" in buf:
-                    break
+            old = termios.tcgetattr(fd)
+            try:
+                tty.setraw(fd)
+                os.write(fd, b"\033]11;?\033\\")
+                ready, _, _ = select.select([fd], [], [], 0.2)
+                if not ready:
+                    return True
+                buf = b""
+                while True:
+                    r, _, _ = select.select([fd], [], [], 0.05)
+                    if not r:
+                        break
+                    buf += os.read(fd, 64)
+                    if buf.endswith(b"\\") or b"\x07" in buf:
+                        break
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old)
         finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+            os.close(fd)
         text = buf.decode("latin-1")
         if "rgb:" in text:
             parts = text.split("rgb:")[1].rstrip("\\\x07\x1b").split("/")
