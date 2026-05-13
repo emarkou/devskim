@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "devskim"
-version = "0.7.0"
+version = "0.8.0"
 description = "Hacker News + Reddit + lobste.rs terminal feed viewer"
 readme = "README.md"
 license = { file = "LICENSE" }
