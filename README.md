@@ -22,7 +22,7 @@
 - Split view with post body / repo stats and threaded comments or README side by side
 - Filter feed by source, refresh on demand, paginate with `m`
 - Keyword search with `/`, copy URL with `y`, mark seen posts dimmed automatically
-- Config file at `~/.devskim/config.toml` — created automatically on first run
+- Config file at `${XDG_CONFIG_HOME:-~/.config}/devskim/config.toml` — created automatically on first run
 
 ## Install
 
@@ -57,10 +57,10 @@ pip install -e .
 
 ---
 
-On first run, a config file is created at `~/.devskim/config.toml`. Edit it to change subreddits:
+On first run, a config file is created at `$XDG_CONFIG_HOME/devskim/config.toml` (defaults to `~/.config/devskim/config.toml`). Edit it to change subreddits:
 
 ```bash
-nano ~/.devskim/config.toml
+nano "${XDG_CONFIG_HOME:-~/.config}/devskim/config.toml"
 ```
 
 ```toml
@@ -108,7 +108,7 @@ Run `devskim` — changes take effect on next launch or press `r` to refresh.
 
 ## Config
 
-`~/.devskim/config.toml` — created on first run with defaults.
+`$XDG_CONFIG_HOME/devskim/config.toml` (default: `~/.config/devskim/config.toml`) — created on first run with defaults. If `~/.devskim` exists and the XDG path does not, the legacy location is used automatically.
 
 | Key | Default | Description |
 |-----|---------|-------------|

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 
 try:
@@ -10,9 +11,38 @@ except ModuleNotFoundError:
 from dataclasses import dataclass, field
 from pathlib import Path
 
-CONFIG_DIR = Path.home() / ".devskim"
+
+def _resolve_config_dir() -> Path:
+    xdg = os.environ.get("XDG_CONFIG_HOME")
+    if xdg and Path(xdg).is_absolute():
+        return Path(xdg) / "devskim"
+    xdg_default = Path.home() / ".config" / "devskim"
+    legacy = Path.home() / ".devskim"
+    # Keep existing installs working if they have ~/.devskim and no XDG dir yet.
+    if legacy.is_dir() and not xdg_default.exists():
+        return legacy
+    return xdg_default
+
+
+def _resolve_cache_dir() -> Path:
+    xdg = os.environ.get("XDG_CACHE_HOME")
+    if xdg and Path(xdg).is_absolute():
+        return Path(xdg) / "devskim"
+    return Path.home() / ".cache" / "devskim"
+
+
+def _resolve_data_dir() -> Path:
+    xdg = os.environ.get("XDG_DATA_HOME")
+    if xdg and Path(xdg).is_absolute():
+        return Path(xdg) / "devskim"
+    return Path.home() / ".local" / "share" / "devskim"
+
+
+CONFIG_DIR = _resolve_config_dir()
 CONFIG_PATH = CONFIG_DIR / "config.toml"
-CACHE_PATH = CONFIG_DIR / "cache.json"
+CACHE_DIR = _resolve_cache_dir()
+CACHE_PATH = CACHE_DIR / "cache.json"
+DATA_DIR = _resolve_data_dir()
 
 DEFAULT_CONFIG = """\
 subreddits = ["programming", "ClaudeAI", "machinelearning"]
@@ -28,7 +58,7 @@ cache_ttl_minutes = 10
 
 @dataclass
 class Config:
-    """Runtime settings loaded from ~/.devskim/config.toml."""
+    """Runtime settings loaded from $XDG_CONFIG_HOME/devskim/config.toml."""
 
     subreddits: list[str] = field(
         default_factory=lambda: ["programming", "python", "machinelearning"]
@@ -79,7 +109,7 @@ def load_cache(ttl_minutes: int) -> list[dict] | None:
 def save_cache(items: list[dict]) -> None:
     """Write feed items to disk with a current timestamp."""
     try:
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
         CACHE_PATH.write_text(json.dumps({"ts": time.time(), "items": items}))
     except Exception:
         pass
