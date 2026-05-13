@@ -182,6 +182,21 @@ def test_load_config_default_theme_is_auto(tmp_path):
     assert config.theme == "auto"
 
 
+def test_config_default_browser_is_empty():
+    assert Config().browser == ""
+
+
+def test_load_config_reads_browser(tmp_path):
+    config_path = tmp_path / "config.toml"
+    config_path.write_text('browser = "firefox"\n')
+    with (
+        patch("devskim.config.CONFIG_PATH", config_path),
+        patch("devskim.config.CONFIG_DIR", tmp_path),
+    ):
+        config, _ = load_config()
+    assert config.browser == "firefox"
+
+
 def test_resolve_cache_dir_xdg_env(tmp_path):
     with patch.dict(os.environ, {"XDG_CACHE_HOME": str(tmp_path)}, clear=False):
         result = _resolve_cache_dir()

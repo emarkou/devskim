@@ -54,6 +54,7 @@ github_trending_count = 25
 # github_trending_since = "daily"       # daily | weekly | monthly
 cache_ttl_minutes = 10
 # theme = "auto"                        # auto (default), dark, or light
+# browser = ""                          # e.g. "firefox", "open -a Safari" (default: system browser)
 """
 
 
@@ -72,6 +73,7 @@ class Config:
     github_trending_since: str = "daily"
     cache_ttl_minutes: int = 10
     theme: str = "auto"
+    browser: str = ""
 
 
 def load_config() -> tuple[Config, bool]:
@@ -93,6 +95,7 @@ def load_config() -> tuple[Config, bool]:
         github_trending_since=str(raw.get("github_trending_since", "daily")),
         cache_ttl_minutes=int(raw.get("cache_ttl_minutes", 10)),
         theme=str(raw.get("theme", "auto")),
+        browser=str(raw.get("browser", "")),
     ), created
 
 

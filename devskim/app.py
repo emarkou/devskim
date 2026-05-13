@@ -4,6 +4,8 @@ import asyncio
 import math
 import os
 import select
+import shlex
+import subprocess
 import sys
 import time as _time
 
@@ -183,6 +185,17 @@ class DevSkimApp(App):
         self.theme = self._textual_theme
         self.query_one("#feed").display = False
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
+
+    def open_url(self, url: str, *, new_tab: bool = True) -> None:
+        browser = self.config.browser.strip()
+        if browser:
+            try:
+                subprocess.Popen(shlex.split(browser) + [url])
+            except (ValueError, OSError) as exc:
+                self.notify(f"Browser error: {exc}", severity="error")
+                super().open_url(url, new_tab=new_tab)
+        else:
+            super().open_url(url, new_tab=new_tab)
 
     async def _load_all(self) -> None:
         """Fetch all sources concurrently; render each source's items as they arrive."""
