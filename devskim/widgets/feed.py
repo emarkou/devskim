@@ -11,12 +11,10 @@ class FeedList(ListView):
     DEFAULT_CSS = """
     FeedList {
         height: 1fr;
-        background: $surface;
     }
     FeedList ListItem {
         height: 3;
         padding: 0;
-        background: $surface;
     }
     FeedList ListItem.-highlight {
         background: $primary-darken-2;

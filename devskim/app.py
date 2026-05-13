@@ -61,7 +61,6 @@ class DevSkimApp(App):
 
     CSS = """
     Screen {
-        background: $surface;
         overflow-y: hidden;
     }
     #status-bar {
@@ -76,7 +75,7 @@ class DevSkimApp(App):
         align: center middle;
     }
     LoadingIndicator {
-        color: #ff6600;
+        color: $accent;
     }
     #search-bar {
         dock: bottom;
