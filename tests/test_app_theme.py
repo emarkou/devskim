@@ -161,3 +161,43 @@ async def test_open_url_default_browser_calls_super():
         async with app.run_test():
             app.open_url("https://example.com")
     mock_super.assert_called_once_with("https://example.com", new_tab=True)
+
+
+@pytest.mark.asyncio
+async def test_open_url_whitespace_browser_falls_back_to_super():
+    config = Config(browser="   ")
+    app = DevSkimApp(config)
+    with (
+        patch("devskim.app._terminal_is_dark", return_value=True),
+        patch("textual.app.App.open_url") as mock_super,
+    ):
+        async with app.run_test():
+            app.open_url("https://example.com")
+    mock_super.assert_called_once_with("https://example.com", new_tab=True)
+
+
+@pytest.mark.asyncio
+async def test_open_url_oserror_falls_back_to_super():
+    config = Config(browser="notabrowser")
+    app = DevSkimApp(config)
+    with (
+        patch("devskim.app._terminal_is_dark", return_value=True),
+        patch("devskim.app.subprocess.Popen", side_effect=OSError("not found")),
+        patch("textual.app.App.open_url") as mock_super,
+    ):
+        async with app.run_test():
+            app.open_url("https://example.com")
+    mock_super.assert_called_once_with("https://example.com", new_tab=True)
+
+
+@pytest.mark.asyncio
+async def test_open_url_valueerror_falls_back_to_super():
+    config = Config(browser="'unclosed")
+    app = DevSkimApp(config)
+    with (
+        patch("devskim.app._terminal_is_dark", return_value=True),
+        patch("textual.app.App.open_url") as mock_super,
+    ):
+        async with app.run_test():
+            app.open_url("https://example.com")
+    mock_super.assert_called_once_with("https://example.com", new_tab=True)

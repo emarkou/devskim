@@ -187,8 +187,13 @@ class DevSkimApp(App):
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 
     def open_url(self, url: str, *, new_tab: bool = True) -> None:
-        if self.config.browser:
-            subprocess.Popen(shlex.split(self.config.browser) + [url])
+        browser = self.config.browser.strip()
+        if browser:
+            try:
+                subprocess.Popen(shlex.split(browser) + [url])
+            except (ValueError, OSError) as exc:
+                self.notify(f"Browser error: {exc}", severity="error")
+                super().open_url(url, new_tab=new_tab)
         else:
             super().open_url(url, new_tab=new_tab)
 
