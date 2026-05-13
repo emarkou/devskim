@@ -100,6 +100,77 @@ def test_post_split_modal_active_pane_default():
 
 
 # ---------------------------------------------------------------------------
+# PostSplitModal active pane indicator — needs DOM
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_post_split_modal_initial_active_class():
+    from unittest.mock import AsyncMock, patch
+
+    class _App(App):
+        def compose(self) -> ComposeResult:
+            yield PostSplitModal(ITEM_HN, "#ff6600")
+
+    with patch(
+        "devskim.widgets.post_split_modal.PostSplitModal._load_comments",
+        new=AsyncMock(return_value=None),
+    ):
+        app = _App()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            post_label = app.query_one("#pane-label-post", Label)
+            comments_label = app.query_one("#pane-label-comments", Label)
+            assert "pane-label--active" in post_label.classes
+            assert "pane-label--active" not in comments_label.classes
+
+
+@pytest.mark.asyncio
+async def test_post_split_modal_switch_pane_toggles_class():
+    from unittest.mock import AsyncMock, patch
+
+    class _App(App):
+        def compose(self) -> ComposeResult:
+            yield PostSplitModal(ITEM_HN, "#ff6600")
+
+    with patch(
+        "devskim.widgets.post_split_modal.PostSplitModal._load_comments",
+        new=AsyncMock(return_value=None),
+    ):
+        app = _App()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            modal = app.query_one(PostSplitModal)
+            modal.action_switch_pane()
+            post_label = app.query_one("#pane-label-post", Label)
+            comments_label = app.query_one("#pane-label-comments", Label)
+            assert "pane-label--active" not in post_label.classes
+            assert "pane-label--active" in comments_label.classes
+
+
+@pytest.mark.asyncio
+async def test_post_split_modal_switch_pane_twice_restores():
+    from unittest.mock import AsyncMock, patch
+
+    class _App(App):
+        def compose(self) -> ComposeResult:
+            yield PostSplitModal(ITEM_HN, "#ff6600")
+
+    with patch(
+        "devskim.widgets.post_split_modal.PostSplitModal._load_comments",
+        new=AsyncMock(return_value=None),
+    ):
+        app = _App()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            modal = app.query_one(PostSplitModal)
+            modal.action_switch_pane()
+            modal.action_switch_pane()
+            post_label = app.query_one("#pane-label-post", Label)
+            assert "pane-label--active" in post_label.classes
+
+
+# ---------------------------------------------------------------------------
 # FeedList — pure methods, no DOM
 # ---------------------------------------------------------------------------
 

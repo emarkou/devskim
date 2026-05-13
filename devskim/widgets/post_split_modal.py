@@ -93,6 +93,10 @@ class PostSplitModal(ModalScreen):
         padding: 0 1;
         border-bottom: solid $surface-darken-2;
     }
+    PostSplitModal .pane-label--active {
+        color: $accent;
+        text-style: bold;
+    }
     PostSplitModal #url-hint {
         height: auto;
         color: $text-muted;
@@ -153,6 +157,7 @@ class PostSplitModal(ModalScreen):
 
     def on_mount(self) -> None:
         self.focus()
+        self.query_one("#pane-label-post", Label).add_class("pane-label--active")
         self.run_worker(self._load_comments(), exclusive=True)
 
     async def _load_comments(self) -> None:
@@ -192,13 +197,18 @@ class PostSplitModal(ModalScreen):
     def action_switch_pane(self) -> None:
         """Toggle the active scroll pane between post body and right pane."""
         self._active_pane = "comments" if self._active_pane == "post" else "post"
-        rl = self._right_label
+        post_label = self.query_one("#pane-label-post", Label)
+        comments_label = self.query_one("#pane-label-comments", Label)
         if self._active_pane == "post":
-            self.query_one("#pane-label-post", Label).update("▶ POST")
-            self.query_one("#pane-label-comments", Label).update(f"  {rl}")
+            post_label.update("▶ POST")
+            post_label.add_class("pane-label--active")
+            comments_label.update(f"  {self._right_label}")
+            comments_label.remove_class("pane-label--active")
         else:
-            self.query_one("#pane-label-post", Label).update("  POST")
-            self.query_one("#pane-label-comments", Label).update(f"▶ {rl}")
+            post_label.update("  POST")
+            post_label.remove_class("pane-label--active")
+            comments_label.update(f"▶ {self._right_label}")
+            comments_label.add_class("pane-label--active")
 
     def action_scroll_down(self) -> None:
         scroll_id = "post-scroll" if self._active_pane == "post" else "comments-scroll"
