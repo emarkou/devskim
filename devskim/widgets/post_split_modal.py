@@ -61,6 +61,7 @@ class PostSplitModal(ModalScreen):
     PostSplitModal > Vertical {
         width: 96%;
         height: 90%;
+        background: transparent;
         border: thick $primary;
     }
     PostSplitModal #split-header {

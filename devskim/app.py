@@ -61,6 +61,7 @@ class DevSkimApp(App):
 
     CSS = """
     Screen {
+        background: transparent;
         overflow-y: hidden;
     }
     #status-bar {
