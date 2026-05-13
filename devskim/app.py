@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import math
+import os
+import select
+import sys
 import time as _time
 
 import httpx
@@ -20,6 +23,52 @@ from .sources.reddit import fetch_reddit_posts
 from .widgets.feed import FeedList
 from .widgets.post_split_modal import PostSplitModal
 from .widgets.story import source_color as get_source_color
+
+
+def _terminal_is_dark() -> bool:
+    """Query terminal background via OSC 11. Returns True if dark (or unknown).
+
+    Opens the controlling TTY directly via os.ctermid() to avoid touching
+    Textual's stdin. POSIX-only; returns True immediately on other platforms.
+    """
+    if sys.platform == "win32":
+        return True
+    try:
+        import termios
+        import tty
+    except ImportError:
+        return True
+    try:
+        tty_path = os.ctermid()
+        fd = os.open(tty_path, os.O_RDWR | os.O_NOCTTY)
+        try:
+            old = termios.tcgetattr(fd)
+            try:
+                tty.setraw(fd)
+                os.write(fd, b"\033]11;?\033\\")
+                ready, _, _ = select.select([fd], [], [], 0.2)
+                if not ready:
+                    return True
+                buf = b""
+                while True:
+                    r, _, _ = select.select([fd], [], [], 0.05)
+                    if not r:
+                        break
+                    buf += os.read(fd, 64)
+                    if buf.endswith(b"\\") or b"\x07" in buf:
+                        break
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        finally:
+            os.close(fd)
+        text = buf.decode("latin-1")
+        if "rgb:" in text:
+            parts = text.split("rgb:")[1].rstrip("\\\x07\x1b").split("/")
+            rv, gv, bv = int(parts[0][:2], 16), int(parts[1][:2], 16), int(parts[2][:2], 16)
+            return (0.299 * rv + 0.587 * gv + 0.114 * bv) < 128
+    except Exception:
+        pass
+    return True
 
 
 class _SearchInput(Input):
@@ -61,7 +110,6 @@ class DevSkimApp(App):
 
     CSS = """
     Screen {
-        background: $surface;
         overflow-y: hidden;
     }
     #status-bar {
@@ -76,7 +124,7 @@ class DevSkimApp(App):
         align: center middle;
     }
     LoadingIndicator {
-        color: #ff6600;
+        color: $accent;
     }
     #search-bar {
         dock: bottom;
@@ -105,6 +153,12 @@ class DevSkimApp(App):
     def __init__(self, config: Config) -> None:
         super().__init__()
         self.config = config
+        if config.theme == "auto":
+            self._initial_dark = _terminal_is_dark()
+        else:
+            self._initial_dark = config.theme != "light"
+        # theme can only be set after mount; stash name for on_mount
+        self._textual_theme = "textual-dark" if self._initial_dark else "textual-light"
         self._all_items: list[dict] = []
         self._source_filter: str = ALL
         self._sources: list[str] = []
@@ -126,6 +180,7 @@ class DevSkimApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.theme = self._textual_theme
         self.query_one("#feed").display = False
         self.run_worker(self._load_all(), exclusive=True, name="fetch")
 

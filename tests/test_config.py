@@ -160,6 +160,28 @@ def test_save_cache_writes_timestamp(tmp_path):
     assert abs(data["ts"] - before) < 5
 
 
+def test_load_config_reads_theme(tmp_path):
+    config_path = tmp_path / "config.toml"
+    config_path.write_text('theme = "light"\n')
+    with (
+        patch("devskim.config.CONFIG_PATH", config_path),
+        patch("devskim.config.CONFIG_DIR", tmp_path),
+    ):
+        config, _ = load_config()
+    assert config.theme == "light"
+
+
+def test_load_config_default_theme_is_auto(tmp_path):
+    config_path = tmp_path / "config.toml"
+    config_path.write_text("")
+    with (
+        patch("devskim.config.CONFIG_PATH", config_path),
+        patch("devskim.config.CONFIG_DIR", tmp_path),
+    ):
+        config, _ = load_config()
+    assert config.theme == "auto"
+
+
 def test_resolve_cache_dir_xdg_env(tmp_path):
     with patch.dict(os.environ, {"XDG_CACHE_HOME": str(tmp_path)}, clear=False):
         result = _resolve_cache_dir()
