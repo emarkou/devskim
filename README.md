@@ -120,6 +120,8 @@ Run `devskim` — changes take effect on next launch or press `r` to refresh.
 | `github_trending_language` | `""` | Filter by language (e.g. `"python"`), empty = all |
 | `github_trending_since` | `"daily"` | Trending window: `daily`, `weekly`, or `monthly` |
 | `cache_ttl_minutes` | `10` | Minutes before refreshing cache |
+| `theme` | `"auto"` | Color theme: `auto` (detect terminal), `dark`, `light`, or any Textual theme name (`nord`, `dracula`, `solarized-light`, …) |
+| `browser` | `""` | Browser command for opening URLs (e.g. `"firefox"`, `"open -a Safari"`). Empty = system default |
 
 ## Tech stack
 
