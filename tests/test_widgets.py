@@ -5,9 +5,6 @@ from textual.app import App, ComposeResult
 from textual.widgets import Label, ListItem
 
 from devskim.sources.comments import Comment
-from devskim.widgets.comments_modal import CommentsModal
-from devskim.widgets.comments_modal import CommentWidget as CommentsCommentWidget
-from devskim.widgets.content_modal import ContentModal
 from devskim.widgets.feed import FeedList
 from devskim.widgets.post_split_modal import CommentWidget as SplitCommentWidget
 from devskim.widgets.post_split_modal import PostSplitModal
@@ -70,13 +67,6 @@ def test_split_comment_widget_render_strips_blank_lines():
     assert "line1" in result
     assert "line2" in result
 
-
-def test_comments_modal_comment_widget_render():
-    c = _comment()
-    w = CommentsCommentWidget(c, "#ac130d")
-    result = w.render()
-    assert "alice" in result
-    assert "hello world" in result
 
 
 # ---------------------------------------------------------------------------
@@ -329,76 +319,6 @@ async def test_feedlist_mark_current_seen_no_index():
     fl = FeedList()
     fl.mark_current_seen()  # should not raise when index is None
 
-
-# ---------------------------------------------------------------------------
-# ContentModal — compose
-# ---------------------------------------------------------------------------
-
-ITEM_WITH_BODY = {**ITEM_HN, "body": "## Some body\n\nParagraph here."}
-
-
-@pytest.mark.asyncio
-async def test_content_modal_composes():
-    class _App(App):
-        def compose(self) -> ComposeResult:
-            yield ContentModal(ITEM_WITH_BODY, "#ff6600")
-
-    async with _App().run_test() as _:
-        pass  # compose without error is sufficient
-
-
-@pytest.mark.asyncio
-async def test_content_modal_title_shown():
-    class _App(App):
-        def compose(self) -> ComposeResult:
-            yield ContentModal(ITEM_WITH_BODY, "#ff6600")
-
-    app = _App()
-    async with app.run_test():
-        title_label = app.query_one("#modal-title", Label)
-        assert "Test Story" in str(title_label.render())
-
-
-# ---------------------------------------------------------------------------
-# CommentsModal — compose (comments fetch mocked)
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_comments_modal_composes():
-    from unittest.mock import AsyncMock, patch
-
-    class _App(App):
-        def compose(self) -> ComposeResult:
-            yield CommentsModal(ITEM_HN, "#ff6600")
-
-    with patch(
-        "devskim.widgets.comments_modal.CommentsModal._load_comments",
-        new_callable=lambda: lambda self: AsyncMock(return_value=None)(),
-    ):
-        async with _App().run_test():
-            pass
-
-
-@pytest.mark.asyncio
-async def test_comments_modal_title_shown():
-    from unittest.mock import AsyncMock, patch
-
-    class _App(App):
-        def compose(self) -> ComposeResult:
-            yield CommentsModal(ITEM_HN, "#ff6600")
-
-    with patch(
-        "devskim.widgets.comments_modal.CommentsModal._load_comments",
-        new=AsyncMock(return_value=None),
-    ):
-        app = _App()
-        async with app.run_test():
-            title = app.query_one("#modal-title", Label)
-            assert "Test Story" in str(title.render())
-
-
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
