@@ -61,7 +61,6 @@ class DevSkimApp(App):
 
     CSS = """
     Screen {
-        background: transparent;
         overflow-y: hidden;
     }
     #status-bar {
@@ -104,6 +103,7 @@ class DevSkimApp(App):
 
     def __init__(self, config: Config) -> None:
         super().__init__()
+        self.dark = config.theme != "light"
         self.config = config
         self._all_items: list[dict] = []
         self._source_filter: str = ALL

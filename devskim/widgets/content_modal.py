@@ -28,7 +28,6 @@ class ContentModal(ModalScreen):
     ContentModal > Vertical {
         width: 90%;
         height: 85%;
-        background: transparent;
         border: thick $primary;
         padding: 0 1;
     }

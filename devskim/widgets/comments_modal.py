@@ -56,7 +56,6 @@ class CommentsModal(ModalScreen):
     CommentsModal > Vertical {
         width: 90%;
         height: 90%;
-        background: transparent;
         border: thick $primary;
         padding: 0 1;
     }
