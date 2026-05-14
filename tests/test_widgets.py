@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import pytest
 from textual.app import App, ComposeResult
-from textual.widgets import Label, ListItem
+from textual.containers import Vertical
+from textual.widgets import ListItem
 
 from devskim.sources.comments import Comment
 from devskim.widgets.feed import FeedList
@@ -68,7 +69,6 @@ def test_split_comment_widget_render_strips_blank_lines():
     assert "line2" in result
 
 
-
 # ---------------------------------------------------------------------------
 # PostSplitModal.__init__ — right-label logic, no DOM
 # ---------------------------------------------------------------------------
@@ -109,10 +109,10 @@ async def test_post_split_modal_initial_active_class():
         app = _App()
         async with app.run_test() as pilot:
             await pilot.pause()
-            post_label = app.query_one("#pane-label-post", Label)
-            comments_label = app.query_one("#pane-label-comments", Label)
-            assert "pane-label--active" in post_label.classes
-            assert "pane-label--active" not in comments_label.classes
+            post_panel = app.query_one("#post-panel", Vertical)
+            comments_panel = app.query_one("#comments-panel", Vertical)
+            assert "panel--active" in post_panel.classes
+            assert "panel--active" not in comments_panel.classes
 
 
 @pytest.mark.asyncio
@@ -132,10 +132,10 @@ async def test_post_split_modal_switch_pane_toggles_class():
             await pilot.pause()
             modal = app.query_one(PostSplitModal)
             modal.action_switch_pane()
-            post_label = app.query_one("#pane-label-post", Label)
-            comments_label = app.query_one("#pane-label-comments", Label)
-            assert "pane-label--active" not in post_label.classes
-            assert "pane-label--active" in comments_label.classes
+            post_panel = app.query_one("#post-panel", Vertical)
+            comments_panel = app.query_one("#comments-panel", Vertical)
+            assert "panel--active" not in post_panel.classes
+            assert "panel--active" in comments_panel.classes
 
 
 @pytest.mark.asyncio
@@ -156,8 +156,8 @@ async def test_post_split_modal_switch_pane_twice_restores():
             modal = app.query_one(PostSplitModal)
             modal.action_switch_pane()
             modal.action_switch_pane()
-            post_label = app.query_one("#pane-label-post", Label)
-            assert "pane-label--active" in post_label.classes
+            post_panel = app.query_one("#post-panel", Vertical)
+            assert "panel--active" in post_panel.classes
 
 
 # ---------------------------------------------------------------------------
@@ -318,7 +318,6 @@ async def test_feedlist_mark_current_seen():
 async def test_feedlist_mark_current_seen_no_index():
     fl = FeedList()
     fl.mark_current_seen()  # should not raise when index is None
-
 
 
 @pytest.mark.asyncio
