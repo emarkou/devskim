@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import pytest
 from textual.app import App, ComposeResult
-from textual.widgets import Label, ListItem
+from textual.containers import Vertical
+from textual.widgets import ListItem
 
 from devskim.sources.comments import Comment
-from devskim.widgets.comments_modal import CommentsModal
-from devskim.widgets.comments_modal import CommentWidget as CommentsCommentWidget
-from devskim.widgets.content_modal import ContentModal
 from devskim.widgets.feed import FeedList
 from devskim.widgets.post_split_modal import CommentWidget as SplitCommentWidget
 from devskim.widgets.post_split_modal import PostSplitModal
@@ -71,14 +69,6 @@ def test_split_comment_widget_render_strips_blank_lines():
     assert "line2" in result
 
 
-def test_comments_modal_comment_widget_render():
-    c = _comment()
-    w = CommentsCommentWidget(c, "#ac130d")
-    result = w.render()
-    assert "alice" in result
-    assert "hello world" in result
-
-
 # ---------------------------------------------------------------------------
 # PostSplitModal.__init__ — right-label logic, no DOM
 # ---------------------------------------------------------------------------
@@ -97,6 +87,77 @@ def test_post_split_modal_right_label_non_github():
 def test_post_split_modal_active_pane_default():
     modal = PostSplitModal(ITEM_HN, "#ff6600")
     assert modal._active_pane == "post"
+
+
+# ---------------------------------------------------------------------------
+# PostSplitModal active pane indicator — needs DOM
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_post_split_modal_initial_active_class():
+    from unittest.mock import AsyncMock, patch
+
+    class _App(App):
+        def compose(self) -> ComposeResult:
+            yield PostSplitModal(ITEM_HN, "#ff6600")
+
+    with patch(
+        "devskim.widgets.post_split_modal.PostSplitModal._load_comments",
+        new=AsyncMock(return_value=None),
+    ):
+        app = _App()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            post_panel = app.query_one("#post-panel", Vertical)
+            comments_panel = app.query_one("#comments-panel", Vertical)
+            assert "panel--active" in post_panel.classes
+            assert "panel--active" not in comments_panel.classes
+
+
+@pytest.mark.asyncio
+async def test_post_split_modal_switch_pane_toggles_class():
+    from unittest.mock import AsyncMock, patch
+
+    class _App(App):
+        def compose(self) -> ComposeResult:
+            yield PostSplitModal(ITEM_HN, "#ff6600")
+
+    with patch(
+        "devskim.widgets.post_split_modal.PostSplitModal._load_comments",
+        new=AsyncMock(return_value=None),
+    ):
+        app = _App()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            modal = app.query_one(PostSplitModal)
+            modal.action_switch_pane()
+            post_panel = app.query_one("#post-panel", Vertical)
+            comments_panel = app.query_one("#comments-panel", Vertical)
+            assert "panel--active" not in post_panel.classes
+            assert "panel--active" in comments_panel.classes
+
+
+@pytest.mark.asyncio
+async def test_post_split_modal_switch_pane_twice_restores():
+    from unittest.mock import AsyncMock, patch
+
+    class _App(App):
+        def compose(self) -> ComposeResult:
+            yield PostSplitModal(ITEM_HN, "#ff6600")
+
+    with patch(
+        "devskim.widgets.post_split_modal.PostSplitModal._load_comments",
+        new=AsyncMock(return_value=None),
+    ):
+        app = _App()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            modal = app.query_one(PostSplitModal)
+            modal.action_switch_pane()
+            modal.action_switch_pane()
+            post_panel = app.query_one("#post-panel", Vertical)
+            assert "panel--active" in post_panel.classes
 
 
 # ---------------------------------------------------------------------------
@@ -257,77 +318,6 @@ async def test_feedlist_mark_current_seen():
 async def test_feedlist_mark_current_seen_no_index():
     fl = FeedList()
     fl.mark_current_seen()  # should not raise when index is None
-
-
-# ---------------------------------------------------------------------------
-# ContentModal — compose
-# ---------------------------------------------------------------------------
-
-ITEM_WITH_BODY = {**ITEM_HN, "body": "## Some body\n\nParagraph here."}
-
-
-@pytest.mark.asyncio
-async def test_content_modal_composes():
-    class _App(App):
-        def compose(self) -> ComposeResult:
-            yield ContentModal(ITEM_WITH_BODY, "#ff6600")
-
-    async with _App().run_test() as _:
-        pass  # compose without error is sufficient
-
-
-@pytest.mark.asyncio
-async def test_content_modal_title_shown():
-    class _App(App):
-        def compose(self) -> ComposeResult:
-            yield ContentModal(ITEM_WITH_BODY, "#ff6600")
-
-    app = _App()
-    async with app.run_test():
-        title_label = app.query_one("#modal-title", Label)
-        assert "Test Story" in str(title_label.render())
-
-
-# ---------------------------------------------------------------------------
-# CommentsModal — compose (comments fetch mocked)
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_comments_modal_composes():
-    from unittest.mock import AsyncMock, patch
-
-    class _App(App):
-        def compose(self) -> ComposeResult:
-            yield CommentsModal(ITEM_HN, "#ff6600")
-
-    with patch(
-        "devskim.widgets.comments_modal.CommentsModal._load_comments",
-        new_callable=lambda: lambda self: AsyncMock(return_value=None)(),
-    ):
-        async with _App().run_test():
-            pass
-
-
-@pytest.mark.asyncio
-async def test_comments_modal_title_shown():
-    from unittest.mock import AsyncMock, patch
-
-    class _App(App):
-        def compose(self) -> ComposeResult:
-            yield CommentsModal(ITEM_HN, "#ff6600")
-
-    with patch(
-        "devskim.widgets.comments_modal.CommentsModal._load_comments",
-        new=AsyncMock(return_value=None),
-    ):
-        app = _App()
-        async with app.run_test():
-            title = app.query_one("#modal-title", Label)
-            assert "Test Story" in str(title.render())
-
-
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio

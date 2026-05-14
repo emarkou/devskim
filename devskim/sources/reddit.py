@@ -5,8 +5,9 @@ from dataclasses import dataclass
 
 import httpx
 
-USER_AGENT = "devskim:v0.1.0 (terminal feed reader)"
+USER_AGENT = "devskim:v0.8.0 (terminal feed reader)"
 REDDIT_HOT = "https://www.reddit.com/r/{subreddit}/hot.json?limit={limit}"
+REDDIT_HOT_AFTER = "https://www.reddit.com/r/{subreddit}/hot.json?limit={limit}&after={after}"
 
 
 @dataclass
@@ -25,9 +26,6 @@ class RedditPost:
     @property
     def source(self) -> str:
         return f"r/{self.subreddit}"
-
-
-REDDIT_HOT_AFTER = "https://www.reddit.com/r/{subreddit}/hot.json?limit={limit}&after={after}"
 
 
 async def _fetch_subreddit(
@@ -93,5 +91,6 @@ async def fetch_reddit_posts(
 
     if client is not None:
         return await _run(client)
-    async with httpx.AsyncClient() as c:
+    # http2=False: Reddit returns 403 with HTTP/2
+    async with httpx.AsyncClient(http2=False) as c:
         return await _run(c)

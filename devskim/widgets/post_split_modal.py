@@ -75,9 +75,17 @@ class PostSplitModal(ModalScreen):
     PostSplitModal #post-panel {
         width: 45%;
         border-right: solid $primary-darken-2;
+        border-top: thick $surface-darken-2;
     }
     PostSplitModal #comments-panel {
         width: 55%;
+        border-top: thick $surface-darken-2;
+    }
+    PostSplitModal #post-panel.panel--active {
+        border-top: thick $primary;
+    }
+    PostSplitModal #comments-panel.panel--active {
+        border-top: thick $primary;
     }
     PostSplitModal #post-scroll {
         height: 1fr;
@@ -86,12 +94,6 @@ class PostSplitModal(ModalScreen):
     PostSplitModal #comments-scroll {
         height: 1fr;
         padding: 0 1;
-    }
-    PostSplitModal .pane-label {
-        height: 1;
-        color: $text-muted;
-        padding: 0 1;
-        border-bottom: solid $surface-darken-2;
     }
     PostSplitModal #url-hint {
         height: auto;
@@ -124,8 +126,7 @@ class PostSplitModal(ModalScreen):
                 id="split-header",
             )
             with Horizontal(id="split-body"):
-                with Vertical(id="post-panel"):
-                    yield Label("▶ POST", id="pane-label-post", classes="pane-label")
+                with Vertical(id="post-panel", classes="panel--active"):
                     with ScrollableContainer(id="post-scroll"):
                         if body:
                             yield Markdown(body)
@@ -139,11 +140,6 @@ class PostSplitModal(ModalScreen):
                         else:
                             yield Label("[dim]No content.[/]")
                 with Vertical(id="comments-panel"):
-                    yield Label(
-                        f"  {self._right_label}",
-                        id="pane-label-comments",
-                        classes="pane-label",
-                    )
                     with ScrollableContainer(id="comments-scroll"):
                         yield Label("Fetching…", id="loading-comments")
             yield Label(
@@ -192,13 +188,14 @@ class PostSplitModal(ModalScreen):
     def action_switch_pane(self) -> None:
         """Toggle the active scroll pane between post body and right pane."""
         self._active_pane = "comments" if self._active_pane == "post" else "post"
-        rl = self._right_label
+        post_panel = self.query_one("#post-panel", Vertical)
+        comments_panel = self.query_one("#comments-panel", Vertical)
         if self._active_pane == "post":
-            self.query_one("#pane-label-post", Label).update("▶ POST")
-            self.query_one("#pane-label-comments", Label).update(f"  {rl}")
+            post_panel.add_class("panel--active")
+            comments_panel.remove_class("panel--active")
         else:
-            self.query_one("#pane-label-post", Label).update("  POST")
-            self.query_one("#pane-label-comments", Label).update(f"▶ {rl}")
+            post_panel.remove_class("panel--active")
+            comments_panel.add_class("panel--active")
 
     def action_scroll_down(self) -> None:
         scroll_id = "post-scroll" if self._active_pane == "post" else "comments-scroll"
